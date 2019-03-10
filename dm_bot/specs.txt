@@ -1,0 +1,31 @@
+Date & Time: 10/Mar/2019 
+http://a.chronus.eu/18AC248
+Max Session Length: 4-6 hours
+Roll20: BH Ace https://app.roll20.net/join/4371968/YntmPQ
+Type: 40% RP, 60% Combat
+Communication Platform: Session 10, VC 10
+Jobs willing to run: Grimm's Adventures: Dwarven Disarray [Rank E]
+Min and Max Players: 4
+
+!dm schedule DATE=03/10/2019 T=23:00 TZ=EST SESSION=Session10 VOICE=VC10 MIN=4 MAX=4 JOB_LENGTH=4-6
+!dm schedule TIMELINK=http://a.chronus.eu/18AC248 SESSION=Session10 VOICE=VC10 MIN=4 MAX=4 RP=40 COMBAT=60 JOBS=1,2,3 RANKS=A,F
+
+Response:
+
+Open Jobs:
+{
+    [DM username]
+    Time: http://a.chronus.eu/18AC248 ([MIN] - [MAX] hours)
+    (optional)Type: 40% RP, 60% Combat
+    Comms: #Session10 #VC10
+    Jobs willing to run: 1) [Job title] 2) [Job title] 3) [Job title]
+    Applicable Ranks: @ARanks, @FRanks
+}
+
+!dm jobs add "Some job title"
+
+Response:
+
+Added new job, "Some job title", to update the description, use `!dm jobs update [JOB_NUMBER] "Your description here"`
+
+

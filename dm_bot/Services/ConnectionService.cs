@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace dm_bot
+namespace dm_bot.Services
 {
-    public  class ConnectionService
+    public class ConnectionService
     {
         public string GetDiscordToken()
         {
