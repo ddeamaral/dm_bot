@@ -26,6 +26,6 @@ Open Jobs:
 
 Response:
 
-Added new job, "Some job title", to update the description, use `!dm jobs update [JOB_NUMBER] "Your description here"`
+Added new job, "Some job title", to update the description, use `!dm jobs update JOB=[JOB_NUMBER] DESCRIPTION="Your description here"`
 
 
