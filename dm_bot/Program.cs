@@ -57,7 +57,7 @@ namespace dm_bot {
 
             int argumentPosition = 0;
 
-            if (message.HasStringPrefix ("!dm ", ref argumentPosition) || message.HasMentionPrefix (_client.CurrentUser, ref argumentPosition)) {
+            if (message.HasStringPrefix ("$", ref argumentPosition) || message.HasMentionPrefix (_client.CurrentUser, ref argumentPosition)) {
                 var context = new SocketCommandContext (_client, message);
 
                 var result = await _commands.ExecuteAsync (context, argumentPosition, _services);
