@@ -2,26 +2,40 @@ using System.Threading.Tasks;
 using dm_bot.Contexts;
 using Discord.Commands;
 
-namespace dm_bot.Commands {
-    public class TradeCommand : ModuleBase<SocketCommandContext> {
+namespace dm_bot.Commands
+{
+    public class TradeCommand : ModuleBase<SocketCommandContext>
+    {
         private readonly DMContext context;
 
-        public TradeCommand (DMContext context) {
+        public TradeCommand(DMContext context)
+        {
             this.context = context;
         }
 
-        [Command ("buy")]
-        public async Task BuyAsync ([Remainder] string message = null) {
+        [Command("trade")]
+        public async Task TradeAsync([Remainder] string message = null)
+        {
+            var tokens = message?.Split(" ");
 
-        }
+            if (!(tokens.Length > 1) && string.IsNullOrWhiteSpace(tokens[0]))
+            {
+                var operation = tokens[0];
+                switch (operation.ToLower())
+                {
+                    case "buy":
+                        break;
+                    case "sell":
+                        break;
+                    case "info":
+                        break;
+                    case "list":
+                        break;
+                    default:
+                        break;
+                }
 
-        [Command ("sell")]
-        public async Task SellAsync ([Remainder] string message = null) {
-
-        }
-
-        [Command ("item")]
-        public async Task ItemDetailsAsync ([Remainder] string message = null) {
+            }
 
         }
     }

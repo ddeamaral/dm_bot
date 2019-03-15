@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using dm_bot.Contexts;
 using dm_bot.Extensions;
 using dm_bot.Models;
+using dm_bot.Services;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -26,17 +28,26 @@ namespace dm_bot.Commands
         {
             try
             {
-                var context = Context.User;
+                var tokens = message.Split(" ");
 
-                var availability = ParseScheduleRequest(message);
+                // $schedule list
+                if (tokens.Length == 1 && !string.IsNullOrWhiteSpace(tokens[0]))
+                {
+                    var allAvailabilities = context.DungeonMasterAvailabilities.Where(dma => dma.PlayDate > DateTime.Today).ToArray();
 
-                availability.DungeonMasterUserName = context.Username;
+                    await RespondWithAvailabilities(allAvailabilities);
+                    return;
+                }
+
+                var availability = await ParseScheduleRequest(message);
+
+                availability.DungeonMasterUserName = Context.User.Username;
 
                 var embedBuilder = new EmbedBuilder();
                 embedBuilder.WithDescription(Templates.AvailabilityResponse(availability));
                 await Context.Channel.SendMessageAsync("", false, embedBuilder.Build());
 
-                await ReplyAsync($"Your game has been scheduled @{context.Mention}");
+                await ReplyAsync($"Your game has been scheduled @{Context.User.Mention}");
             }
             catch (ParseException exception)
             {
@@ -44,7 +55,21 @@ namespace dm_bot.Commands
             }
         }
 
-        public DungeonMasterAvailability ParseScheduleRequest(string message)
+        private async Task RespondWithAvailabilities(DungeonMasterAvailability[] allAvailabilities)
+        {
+            var sb = new StringBuilder();
+
+            foreach (var dmAvail in allAvailabilities)
+            {
+                sb.Append(Templates.AvailabilityResponse(dmAvail));
+            }
+
+            var embedBuilder = new EmbedBuilder();
+            embedBuilder.WithDescription(sb.ToString());
+            await Context.Channel.SendMessageAsync("", false, embedBuilder.Build());
+        }
+
+        public async Task<DungeonMasterAvailability> ParseScheduleRequest(string message)
         {
             var dungeonMasterAvailability = new DungeonMasterAvailability();
 
@@ -60,12 +85,12 @@ namespace dm_bot.Commands
                 }
             }
 
-            dungeonMasterAvailability = ObjectFromDictionary(requestAttributes);
+            dungeonMasterAvailability = await ObjectFromDictionary(requestAttributes);
 
             return dungeonMasterAvailability;
         }
 
-        private DungeonMasterAvailability ObjectFromDictionary(Dictionary<string, string> dictionary)
+        private async Task<DungeonMasterAvailability> ObjectFromDictionary(Dictionary<string, string> dictionary)
         {
             var dm = new DungeonMasterAvailability();
 
@@ -78,10 +103,31 @@ namespace dm_bot.Commands
             dm.VoiceCommChannel = dictionary.ContainsKey("VOICE") ? dictionary["VOICE"] : null;
             dm.Jobs = ParseJobs(dictionary["JOBS"]);
 
+            var hasDateParts = dictionary.ContainsKey("DATE") && dictionary.ContainsKey("TIME") && dictionary.ContainsKey("TZ");
+
+            if (hasDateParts)
+            {
+                var playDate = $"{dictionary["DATE"]} {dictionary["TIME"]}";
+                DateTime dt;
+
+                if (DateTime.TryParse(playDate, out dt))
+                {
+                    dm.PlayDate = (DateTime) TimeZoneConversionService.ConvertDateTimeTo(dt, "EST");
+                }
+                else
+                {
+                    await ReplyAsync($"Sorry, {Context.User.Mention}, please enter a DATE, TIME and TZ");
+                }
+            }
+
             if (dictionary.ContainsKey("RANKS"))
             {
                 dm.TaggedRanks = ParseRanks(dictionary["RANKS"]);
             }
+
+            await context.DungeonMasterAvailabilities.AddAsync(dm);
+
+            await context.SaveChangesAsync();
 
             return dm;
         }

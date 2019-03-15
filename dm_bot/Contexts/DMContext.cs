@@ -1,7 +1,7 @@
-using dm_bot.Models;
-using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using dm_bot.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace dm_bot.Contexts
 {
@@ -12,6 +12,10 @@ namespace dm_bot.Contexts
         public DbSet<Job> Jobs { get; set; }
 
         public DbSet<Rank> Ranks { get; set; }
+
+        public DbSet<Player> Players { get; set; }
+
+        public DbSet<Item> Items { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -31,7 +35,7 @@ namespace dm_bot.Contexts
                     Ranks.Add(new Rank()
                     {
                         RankLetter = rank,
-                        RankName = $"{rank} Rank"
+                            RankName = $"{rank} Rank"
                     });
                 }
             }

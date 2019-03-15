@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace dm_bot.Models
@@ -27,5 +28,8 @@ namespace dm_bot.Models
         public ICollection<Job> Jobs { get; set; }
 
         public ICollection<Rank> TaggedRanks { get; set; }
+
+        public DateTime PlayDate { get; set; }
+
     }
 }
