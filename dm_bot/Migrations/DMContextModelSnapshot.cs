@@ -49,11 +49,19 @@ namespace dm_bot.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<float>("GoldCost");
+                    b.Property<decimal>("CopperCost");
+
+                    b.Property<decimal>("ElectrumCost");
+
+                    b.Property<decimal>("GoldCost");
+
+                    b.Property<bool>("IsTradeOnly");
 
                     b.Property<string>("Name");
 
-                    b.Property<float>("SellValue");
+                    b.Property<decimal>("SellValue");
+
+                    b.Property<decimal>("SilverCost");
 
                     b.HasKey("Id");
 
@@ -85,17 +93,17 @@ namespace dm_bot.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<float>("Copper");
+                    b.Property<decimal>("Copper");
 
                     b.Property<string>("DiscordMention");
 
-                    b.Property<float>("Gold");
+                    b.Property<decimal>("Electrum");
 
-                    b.Property<float>("Platinum");
+                    b.Property<decimal>("Gold");
 
                     b.Property<string>("RoleIds");
 
-                    b.Property<float>("Silver");
+                    b.Property<decimal>("Silver");
 
                     b.HasKey("Id");
 

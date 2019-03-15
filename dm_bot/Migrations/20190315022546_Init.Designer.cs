@@ -9,8 +9,8 @@ using dm_bot.Contexts;
 namespace dm_bot.Migrations
 {
     [DbContext(typeof(DMContext))]
-    [Migration("20190314170310_PlayerItemAndPlayDate")]
-    partial class PlayerItemAndPlayDate
+    [Migration("20190315022546_Init")]
+    partial class Init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -51,11 +51,19 @@ namespace dm_bot.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<float>("GoldCost");
+                    b.Property<decimal>("CopperCost");
+
+                    b.Property<decimal>("ElectrumCost");
+
+                    b.Property<decimal>("GoldCost");
+
+                    b.Property<bool>("IsTradeOnly");
 
                     b.Property<string>("Name");
 
-                    b.Property<float>("SellValue");
+                    b.Property<decimal>("SellValue");
+
+                    b.Property<decimal>("SilverCost");
 
                     b.HasKey("Id");
 
@@ -87,17 +95,17 @@ namespace dm_bot.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<float>("Copper");
+                    b.Property<decimal>("Copper");
 
                     b.Property<string>("DiscordMention");
 
-                    b.Property<float>("Gold");
+                    b.Property<decimal>("Electrum");
 
-                    b.Property<float>("Platinum");
+                    b.Property<decimal>("Gold");
 
                     b.Property<string>("RoleIds");
 
-                    b.Property<float>("Silver");
+                    b.Property<decimal>("Silver");
 
                     b.HasKey("Id");
 

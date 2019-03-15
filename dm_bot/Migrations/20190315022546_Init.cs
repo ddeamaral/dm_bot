@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace dm_bot.Migrations
 {
@@ -19,11 +20,49 @@ namespace dm_bot.Migrations
                     MinHours = table.Column<int>(nullable: false),
                     MaxHours = table.Column<int>(nullable: false),
                     RoleplayingPercent = table.Column<int>(nullable: false),
-                    CombatPercent = table.Column<int>(nullable: false)
+                    CombatPercent = table.Column<int>(nullable: false),
+                    PlayDate = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_DungeonMasterAvailabilities", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Items",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Name = table.Column<string>(nullable: true),
+                    GoldCost = table.Column<decimal>(nullable: false),
+                    CopperCost = table.Column<decimal>(nullable: false),
+                    SilverCost = table.Column<decimal>(nullable: false),
+                    ElectrumCost = table.Column<decimal>(nullable: false),
+                    IsTradeOnly = table.Column<bool>(nullable: false),
+                    SellValue = table.Column<decimal>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Items", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Players",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    DiscordMention = table.Column<string>(nullable: true),
+                    Gold = table.Column<decimal>(nullable: false),
+                    Silver = table.Column<decimal>(nullable: false),
+                    Copper = table.Column<decimal>(nullable: false),
+                    Electrum = table.Column<decimal>(nullable: false),
+                    RoleIds = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Players", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -83,7 +122,13 @@ namespace dm_bot.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "Items");
+
+            migrationBuilder.DropTable(
                 name: "Jobs");
+
+            migrationBuilder.DropTable(
+                name: "Players");
 
             migrationBuilder.DropTable(
                 name: "Ranks");
