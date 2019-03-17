@@ -23,8 +23,10 @@ namespace dm_bot.Commands
         [Command("buy")]
         public async Task BuyAsync([Remainder] string message = null)
         {
+            // find the player
             var user = _db.Players.FirstOrDefault(p => p.DiscordMention == Context.User.Mention);
 
+            // If we didn't find one, redirect them to staff to add them
             if (user == null)
             {
                 var helpRole = configuration.GetValue("helpRoleName", "Staff");
@@ -32,7 +34,22 @@ namespace dm_bot.Commands
                 return;
             }
 
-            var itemId = int.Parse(message.Split(" ") [0]);
+            var tokens = message.Split(" ");
+
+            if (tokens == null || tokens.Length < 1)
+            {
+                await ReplyAsync("Sorry, you seemed to not have supplied an item id. Please use $item find <item name> to find the item id. Then use $buy <item id>");
+                return;
+            }
+
+            var itemId = -1;
+
+            if (!int.TryParse(tokens[0], out itemId) || itemId == -1)
+            {
+                await ReplyAsync($"Sorry, that item does not appear to exist. Use '$item find <item name>' to find the item id. Then use '$buy <item id>'.");
+                return;
+
+            }
 
             var item = _db.Items.FirstOrDefault(i => i.Id == itemId);
 
@@ -44,7 +61,7 @@ namespace dm_bot.Commands
 
             if (item.IsTradeOnly)
             {
-                await ReplyAsync($"Sorry, item can't be bought {Context.User.Mention}. You could see if someone has it and wants to trade.");
+                await ReplyAsync($"Sorry, {item.Name} can't be bought {Context.User.Mention}. You could see if someone has it and wants to trade.");
                 return;
             }
 
@@ -53,6 +70,10 @@ namespace dm_bot.Commands
                 await ReplyAsync($"Sorry, item could not be bought {Context.User.Mention}, please double check you have the funds. You have {user.Gold}gp, {user.Silver}sp, {user.Electrum}ep, {user.Copper}");
                 return;
             }
+
+            _db.Players.Update(user);
+
+            await _db.SaveChangesAsync();
         }
     }
 }

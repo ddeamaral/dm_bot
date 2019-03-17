@@ -81,5 +81,34 @@ namespace dm_bot.Models
                 return -1;
             }
         }
+
+        [NotMapped]
+        public string DisplayValue
+        {
+            get
+            {
+                if (this.GoldCost > 0)
+                {
+                    return $"{this.GoldCost}gp";
+                }
+
+                if (this.SilverCost > 0)
+                {
+                    return $"{this.SilverCost}sp";
+                }
+
+                if (this.CopperCost > 0)
+                {
+                    return $"{this.CopperCost}cp";
+                }
+
+                if (this.ElectrumCost > 0)
+                {
+                    return $"{this.ElectrumCost}ep";
+                }
+
+                return "No value";
+            }
+        }
     }
 }

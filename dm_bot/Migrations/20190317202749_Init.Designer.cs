@@ -9,7 +9,7 @@ using dm_bot.Contexts;
 namespace dm_bot.Migrations
 {
     [DbContext(typeof(DMContext))]
-    [Migration("20190315022546_Init")]
+    [Migration("20190317202749_Init")]
     partial class Init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -46,6 +46,26 @@ namespace dm_bot.Migrations
                     b.ToTable("DungeonMasterAvailabilities");
                 });
 
+            modelBuilder.Entity("dm_bot.Models.InventoryItem", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<int?>("ItemId");
+
+                    b.Property<int?>("PlayerId");
+
+                    b.Property<int>("Quantity");
+
+                    b.HasKey("ID");
+
+                    b.HasIndex("ItemId");
+
+                    b.HasIndex("PlayerId");
+
+                    b.ToTable("InventoryItem");
+                });
+
             modelBuilder.Entity("dm_bot.Models.Item", b =>
                 {
                     b.Property<int>("Id")
@@ -75,11 +95,15 @@ namespace dm_bot.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<string>("Author");
+
                     b.Property<string>("Description");
 
                     b.Property<int>("Difficulty");
 
                     b.Property<int?>("DungeonMasterAvailabilityId");
+
+                    b.Property<string>("JobLink");
 
                     b.Property<string>("Title");
 
@@ -94,6 +118,8 @@ namespace dm_bot.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
+
+                    b.Property<string>("CharacterName");
 
                     b.Property<decimal>("Copper");
 
@@ -128,6 +154,17 @@ namespace dm_bot.Migrations
                     b.HasIndex("DungeonMasterAvailabilityId");
 
                     b.ToTable("Ranks");
+                });
+
+            modelBuilder.Entity("dm_bot.Models.InventoryItem", b =>
+                {
+                    b.HasOne("dm_bot.Models.Item", "Item")
+                        .WithMany()
+                        .HasForeignKey("ItemId");
+
+                    b.HasOne("dm_bot.Models.Player")
+                        .WithMany("PlayerInventory")
+                        .HasForeignKey("PlayerId");
                 });
 
             modelBuilder.Entity("dm_bot.Models.Job", b =>

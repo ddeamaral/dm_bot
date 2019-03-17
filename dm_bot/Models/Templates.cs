@@ -11,9 +11,10 @@ namespace dm_bot.Models
 
         public static string AvailabilityResponse(DungeonMasterAvailability dmRequest)
         {
-            return $@"{dmRequest.DungeonMasterUserName}
+            return $@"
+            DM:{dmRequest.DungeonMasterUserName}
             Time: {dmRequest.ChronusTimeLink} ({dmRequest.MinHours} - {dmRequest.MaxHours} hours)
-            (optional)Type: 40% RP, 60% Combat
+            {(dmRequest.RoleplayingPercent > 0 || dmRequest.CombatPercent > 0 ? $"Combat: {dmRequest.CombatPercent}%, RP: {dmRequest.RoleplayingPercent}" : "")} 
             Comms: #{dmRequest.ChatCommChannel} #{dmRequest.VoiceCommChannel}
             Jobs willing to run: {JobFormatString (dmRequest.Jobs)}
             Applicable Ranks: {RankFormatString (dmRequest.TaggedRanks.ToList())}";

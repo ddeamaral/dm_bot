@@ -8,6 +8,8 @@ namespace dm_bot.Models
         [Key]
         public int Id { get; set; }
 
+        public string CharacterName { get; set; }
+
         public string DiscordMention { get; set; }
 
         public decimal Gold { get; set; }
@@ -32,6 +34,8 @@ namespace dm_bot.Models
                 return total;
             }
         }
+
+        public ICollection<InventoryItem> PlayerInventory { get; set; }
 
         public string RoleIds { get; set; }
     }

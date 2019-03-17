@@ -7,22 +7,9 @@ namespace dm_bot.Services
     {
         private Dictionary<string, string> timezones = new Dictionary<string, string>() { { "", "" } };
 
-        public static DateTime? ConvertDateTimeTo(DateTime input, string timezone = "EST")
+        public static DateTime? ToUtc(DateTime input)
         {
-            DateTime? output = null;
-
-            switch (timezone.ToUpper())
-            {
-                case "EST":
-                    var utc = TimeZoneInfo.ConvertTimeToUtc(input);
-                    var est = TimeZoneInfo.FindSystemTimeZoneById("EST");
-                    output = TimeZoneInfo.ConvertTime(input, est);
-                    break;
-                default:
-                    break;
-            }
-
-            return output;
+            return input.ToUniversalTime();
         }
     }
 }

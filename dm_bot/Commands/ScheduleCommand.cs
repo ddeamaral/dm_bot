@@ -11,6 +11,7 @@ using dm_bot.Services;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 
 namespace dm_bot.Commands
 {
@@ -33,7 +34,11 @@ namespace dm_bot.Commands
                 // $schedule list
                 if (tokens.Length == 1 && !string.IsNullOrWhiteSpace(tokens[0]))
                 {
-                    var allAvailabilities = context.DungeonMasterAvailabilities.Where(dma => dma.PlayDate > DateTime.Today).ToArray();
+                    var allAvailabilities = context.DungeonMasterAvailabilities
+                        .Include(dm => dm.TaggedRanks)
+                        .Include(dm => dm.Jobs)
+                        .Where(dma => dma.PlayDate > DateTime.Today)
+                        .ToArray();
 
                     await RespondWithAvailabilities(allAvailabilities);
                     return;
@@ -112,7 +117,7 @@ namespace dm_bot.Commands
 
                 if (DateTime.TryParse(playDate, out dt))
                 {
-                    dm.PlayDate = (DateTime) TimeZoneConversionService.ConvertDateTimeTo(dt, "EST");
+                    dm.PlayDate = (DateTime) TimeZoneConversionService.ToUtc(dt);
                 }
                 else
                 {

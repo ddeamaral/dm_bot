@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using dm_bot.Models;
 
 namespace dm_bot.Services
@@ -14,6 +15,36 @@ namespace dm_bot.Services
 
             var change = player.TotalWealth - item.Cost;
 
+            UpdatePlayerWealth(player, change);
+
+            player.PlayerInventory.Add(new InventoryItem() { Item = item, Quantity = 1 });
+
+            return player.TotalWealth > 0;
+        }
+
+        public bool Sell(Player player, Item item)
+        {
+            if (player == null || item == null)
+            {
+                return false;
+            }
+
+            if (player.PlayerInventory == null || !player.PlayerInventory.Any(inventory => inventory.Item.Id == item.Id))
+            {
+                return false;
+            }
+
+            var change = player.TotalWealth + (item.Cost * 0.5m);
+
+            UpdatePlayerWealth(player, change);
+
+            player.PlayerInventory.Remove(player.PlayerInventory.First(inventory => inventory.Item.Id == item.Id));
+
+            return true;
+        }
+
+        private static void UpdatePlayerWealth(Player player, decimal change)
+        {
             var coins = new []
             {
                 new { name = "cp", nominal = 0.01m },
@@ -45,8 +76,6 @@ namespace dm_bot.Services
                         continue;
                 }
             }
-
-            return player.TotalWealth > 0;
         }
 
         private bool CanAfford(Player player, Item item) => player.TotalWealth > item.Cost;

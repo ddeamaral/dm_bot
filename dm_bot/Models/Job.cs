@@ -11,6 +11,10 @@ namespace dm_bot.Models
 
         public string Description { get; set; }
 
+        public string JobLink { get; set; }
+
+        public string Author { get; set; }
+
         public int Difficulty { get; set; }
     }
 }

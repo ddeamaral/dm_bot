@@ -32,7 +32,7 @@ namespace dm_bot.Commands
                 var token = message.Split(" ", 2);
                 if (token.Length < 2 && !(token.Length == 1 && token[0].ToLower() == "list"))
                 {
-                    await ReplyAsync($"you must specify a command, use '!dm jobs help' for help.");
+                    await ReplyAsync($"you must specify a command, use '$jobs help' for help.");
                     return;
                 }
                 var job = new Job();
@@ -60,7 +60,7 @@ namespace dm_bot.Commands
                         await ListJobs();
                         break;
                     case "help":
-                        ShowHelpMessage();
+                        await ShowHelpMessage();
                         break;
 
                     default:
@@ -80,21 +80,32 @@ namespace dm_bot.Commands
 
             _db.Jobs.Add(job);
             await _db.SaveChangesAsync();
-            await ReplyAsync($"Added new job, '{job.Title}', to update the description, use `!dm jobs update {job.Id} \"Your description here\"`");
+            await ReplyAsync($"Added new job, '{job.Title}', to update the description, use `$jobs description {job.Id} <Your description here>`");
         }
 
-        private void ShowHelpMessage()
+        private async Task ShowHelpMessage()
         {
-            throw new NotImplementedException();
+            var sb = new StringBuilder();
+
+            sb.AppendLine("$jobs add <Title> - Use this command to create a new job with a title");
+            sb.AppendLine("$jobs description <job id> <Description> - Use this command to get enter a job description");
+            sb.AppendLine("$jobs find <Title> - Use this command to search for a job by title");
+            sb.AppendLine("$jobs list - Use this command to see a list of all available jobs");
+
+            var embedBuilder = new EmbedBuilder();
+            embedBuilder.WithDescription(sb.ToString());
+            await Context.Channel.SendMessageAsync("", false, embedBuilder.Build());
         }
 
         private async Task SearchExistingJobs(string message)
         {
-            var matches = _db.Jobs.Where(job => job.Title.ToLower().Contains(message.ToLower())).ToList();
+            var q = message.ToLower();
+
+            var matches = _db.Jobs.Where(job => job.Title.ToLower().Contains(q)).ToList();
 
             if (matches.Count > 0)
             {
-                await SendJobs(matches);
+                await ReplyWithJobs(matches);
                 return;
             }
 
@@ -105,10 +116,10 @@ namespace dm_bot.Commands
         {
             var jobs = _db.Jobs.ToList();
 
-            await SendJobs(jobs);
+            await ReplyWithJobs(jobs);
         }
 
-        private async Task SendJobs(List<Job> jobs)
+        private async Task ReplyWithJobs(List<Job> jobs)
         {
             var sb = new StringBuilder();
             for (int i = 0; i < jobs.Count; i++)
