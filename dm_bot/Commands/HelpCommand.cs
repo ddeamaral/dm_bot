@@ -11,14 +11,14 @@ namespace dm_bot.Commands
     public class HelpCommand : ModuleBase<SocketCommandContext>
     {
         private readonly DMContext _db;
-        private readonly IConfiguration configuration;
-        private readonly TradeService tradeService;
+        private readonly IConfiguration _configuration;
+        private readonly TradeService _tradeService;
 
         public HelpCommand(DMContext context, IConfiguration configuration, TradeService tradeService)
         {
             this._db = context;
-            this.configuration = configuration;
-            this.tradeService = tradeService;
+            this._configuration = configuration;
+            this._tradeService = tradeService;
         }
 
         [Command("help")]
@@ -29,6 +29,8 @@ namespace dm_bot.Commands
             helpStringBuilder.AppendLine("Available commands with individual help options:");
             helpStringBuilder.AppendLine("$jobs help");
             helpStringBuilder.AppendLine("$buy help");
+
+            await ReplyAsync(helpStringBuilder.ToString());
         }
     }
 }

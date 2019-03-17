@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using dm_bot.Contexts;
 using dm_bot.Services;
 using Discord.Commands;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 
 namespace dm_bot.Commands
@@ -10,26 +11,28 @@ namespace dm_bot.Commands
     public class BuyCommand : ModuleBase<SocketCommandContext>
     {
         private readonly DMContext _db;
-        private readonly IConfiguration configuration;
-        private readonly TradeService tradeService;
+        private readonly IConfiguration _configuration;
+        private readonly TradeService _tradeService;
 
         public BuyCommand(DMContext context, IConfiguration configuration, TradeService tradeService)
         {
             this._db = context;
-            this.configuration = configuration;
-            this.tradeService = tradeService;
+            this._configuration = configuration;
+            this._tradeService = tradeService;
         }
 
         [Command("buy")]
         public async Task BuyAsync([Remainder] string message = null)
         {
             // find the player
-            var user = _db.Players.FirstOrDefault(p => p.DiscordMention == Context.User.Mention);
+            var user = _db.Players
+                .Include(p => p.PlayerInventory)
+                .FirstOrDefault(p => p.DiscordMention == Context.User.Mention);
 
             // If we didn't find one, redirect them to staff to add them
             if (user == null)
             {
-                var helpRole = configuration.GetValue("helpRoleName", "Staff");
+                var helpRole = _configuration.GetValue("helpRoleName", "Staff");
                 await ReplyAsync($"Sorry, you don't appear to be in our system. Please talk to somone in {Context.Guild.Roles.First(role => role.Name == helpRole).Mention}");
                 return;
             }
@@ -65,7 +68,7 @@ namespace dm_bot.Commands
                 return;
             }
 
-            if (!tradeService.Buy(user, item))
+            if (!_tradeService.Buy(user, item))
             {
                 await ReplyAsync($"Sorry, item could not be bought {Context.User.Mention}, please double check you have the funds. You have {user.Gold}gp, {user.Silver}sp, {user.Electrum}ep, {user.Copper}");
                 return;

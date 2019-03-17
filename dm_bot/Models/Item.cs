@@ -89,22 +89,22 @@ namespace dm_bot.Models
             {
                 if (this.GoldCost > 0)
                 {
-                    return $"{this.GoldCost}gp";
+                    return $"{(int)this.GoldCost}gp";
                 }
 
                 if (this.SilverCost > 0)
                 {
-                    return $"{this.SilverCost}sp";
+                    return $"{(int)this.SilverCost}sp";
                 }
 
                 if (this.CopperCost > 0)
                 {
-                    return $"{this.CopperCost}cp";
+                    return $"{(int)this.CopperCost}cp";
                 }
 
                 if (this.ElectrumCost > 0)
                 {
-                    return $"{this.ElectrumCost}ep";
+                    return $"{(int)this.ElectrumCost}ep";
                 }
 
                 return "No value";

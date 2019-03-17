@@ -17,11 +17,11 @@ namespace dm_bot.Commands
 {
     public class ScheduleCommand : ModuleBase<SocketCommandContext>
     {
-        private readonly DMContext context;
+        private readonly DMContext _db;
 
         public ScheduleCommand(DMContext context)
         {
-            this.context = context;
+            this._db = context;
         }
 
         [Command("schedule")]
@@ -34,7 +34,7 @@ namespace dm_bot.Commands
                 // $schedule list
                 if (tokens.Length == 1 && !string.IsNullOrWhiteSpace(tokens[0]))
                 {
-                    var allAvailabilities = context.DungeonMasterAvailabilities
+                    var allAvailabilities = _db.DungeonMasterAvailabilities
                         .Include(dm => dm.TaggedRanks)
                         .Include(dm => dm.Jobs)
                         .Where(dma => dma.PlayDate > DateTime.Today)
@@ -130,9 +130,9 @@ namespace dm_bot.Commands
                 dm.TaggedRanks = ParseRanks(dictionary["RANKS"]);
             }
 
-            await context.DungeonMasterAvailabilities.AddAsync(dm);
+            await _db.DungeonMasterAvailabilities.AddAsync(dm);
 
-            await context.SaveChangesAsync();
+            await _db.SaveChangesAsync();
 
             return dm;
         }
@@ -141,12 +141,12 @@ namespace dm_bot.Commands
         {
             var jobs = jobString.Split(",").Select(jobId => int.Parse(jobId));
 
-            return context.Jobs.Where(job => jobs.Contains(job.Id)).ToList();
+            return _db.Jobs.Where(job => jobs.Contains(job.Id)).ToList();
         }
 
         private ICollection<Rank> ParseRanks(string rankString)
         {
-            var ranks = context.Ranks.ToDictionary(r => r.RankLetter, r => r);
+            var ranks = _db.Ranks.ToDictionary(r => r.RankLetter, r => r);
 
             var returnRanks = new List<Rank>();
 

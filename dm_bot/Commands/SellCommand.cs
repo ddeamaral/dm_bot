@@ -10,14 +10,14 @@ namespace dm_bot.Commands
     public class SellCommand : ModuleBase<SocketCommandContext>
     {
         private readonly DMContext _db;
-        private readonly IConfiguration configuration;
-        private readonly TradeService tradeService;
+        private readonly IConfiguration _configuration;
+        private readonly TradeService _tradeService;
 
         public SellCommand(DMContext context, IConfiguration configuration, TradeService tradeService)
         {
             this._db = context;
-            this.configuration = configuration;
-            this.tradeService = tradeService;
+            this._configuration = configuration;
+            this._tradeService = tradeService;
         }
 
         [Command("sell")]
@@ -29,7 +29,7 @@ namespace dm_bot.Commands
             // If we didn't find one, redirect them to staff to add them
             if (user == null)
             {
-                var helpRole = configuration.GetValue("helpRoleName", "Staff");
+                var helpRole = _configuration.GetValue("helpRoleName", "Staff");
                 await ReplyAsync($"Sorry, you don't appear to be in our system. Please talk to somone in {Context.Guild.Roles.First(role => role.Name == helpRole).Mention}");
                 return;
             }
@@ -48,7 +48,7 @@ namespace dm_bot.Commands
                 return;
             }
 
-            if (!tradeService.Sell(user, item))
+            if (!_tradeService.Sell(user, item))
             {
                 await ReplyAsync($"Sorry, item could not be sold {Context.User.Mention}, please double check you have done it correctly. You have {user.Gold}gp, {user.Silver}sp, {user.Electrum}ep, {user.Copper}");
                 return;

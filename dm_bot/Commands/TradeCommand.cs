@@ -10,11 +10,11 @@ namespace dm_bot.Commands
 {
     public class TradeCommand : ModuleBase<SocketCommandContext>
     {
-        private readonly DMContext context;
+        private readonly DMContext _db;
 
         public TradeCommand(DMContext context)
         {
-            this.context = context;
+            this._db = context;
         }
 
         [Command("item")]
@@ -27,16 +27,15 @@ namespace dm_bot.Commands
         {
             var sb = new StringBuilder();
 
-            foreach (var item in context.Items.OrderBy(i => i.Name).ToList())
+            foreach (var item in _db.Items.OrderBy(i => i.Name).ToList())
             {
-                sb.AppendLine($"{item.Id}) {item.Name} {item.DisplayValue}");
+                sb.AppendLine($"{item.Id}) **{item.Name}** {item.DisplayValue}");
                 if (sb.Length > 1900)
                 {
-                    await this.Context.User.SendMessageAsync(sb.ToString());
+                    await ReplyAsync(sb.ToString());
                     sb.Clear();
                 }
             }
-
         }
 
         [Command("trade")]
