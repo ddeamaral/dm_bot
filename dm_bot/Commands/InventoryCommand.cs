@@ -40,14 +40,8 @@ namespace dm_bot.Commands
 
             switch (command.ToLower())
             {
-                case "list": // $inventory list
-                    await ShowUserInventory(user);
-                    break;
-                case "add": // $inventory add <Item Id> <Quantity>
-                    await AddItemToInventory(user, itemId, quantity);
-                    break;
-                case "remove": // $inventory remove <Item Id>
-                    await RemoveItemFromInventory(user, itemId);
+                case "gold":
+                    await ShowPlayerGold(user);
                     break;
                 default:
                     await ShowHelpMessage();
@@ -55,55 +49,9 @@ namespace dm_bot.Commands
             }
         }
 
-        private async Task RemoveItemFromInventory(Player user, int itemId)
+        private async Task ShowPlayerGold(Player user)
         {
-            if (!user.PlayerInventory.Any(item => item.Item.Id == itemId))
-            {
-                return;
-            }
-
-            user.PlayerInventory.Remove(user.PlayerInventory.First(item => item.Item.Id == itemId));
-
-            _db.Players.Update(user);
-
-            await _db.SaveChangesAsync();
-        }
-
-        private async Task AddItemToInventory(Player user, int itemId, int quantity)
-        {
-            if (user.PlayerInventory.Any(inventory => inventory.Item.Id == itemId))
-            {
-                user.PlayerInventory.First(inventory => inventory.Item.Id == itemId).Quantity += quantity;
-            }
-
-            var item = await _db.Items.FindAsync(new { ID = itemId });
-
-            if (item == null)
-            {
-                await ReplyAsync("");
-                return;
-            }
-
-            user.PlayerInventory.Add(new InventoryItem() { Item = item, Quantity = quantity });
-
-            _db.Update(user);
-            await _db.SaveChangesAsync();
-        }
-
-        private async Task ShowUserInventory(Player user)
-        {
-            var sb = new StringBuilder();
-
-            for (int i = 0; i < user.PlayerInventory.Count; i++)
-            {
-                var item = user.PlayerInventory.ElementAt(i);
-
-                sb.AppendLine($"{item.Item.Id}) {item.Item.Name} ({item.Item.DisplayValue})");
-            }
-
-            var embedBuilder = new EmbedBuilder();
-            embedBuilder.WithDescription(sb.ToString());
-            await Context.Channel.SendMessageAsync("", false, embedBuilder.Build());
+            await ReplyAsync($"You have {user.DisplayWealth}, {Context.User.Mention}");
         }
 
         private Task ShowHelpMessage()

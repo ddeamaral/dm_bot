@@ -35,8 +35,8 @@ namespace dm_bot.Models
             }
         }
 
-        public ICollection<InventoryItem> PlayerInventory { get; set; }
-
         public string RoleIds { get; set; }
+
+        public string DisplayWealth => $"{this.Gold}gp {this.Electrum}ep {this.Silver}sp {this.Copper}cp";
     }
 }

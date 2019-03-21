@@ -17,8 +17,6 @@ namespace dm_bot.Services
 
             UpdatePlayerWealth(player, change);
 
-            player.PlayerInventory.Add(new InventoryItem() { Item = item, Quantity = 1 });
-
             return player.TotalWealth > 0;
         }
 
@@ -29,16 +27,9 @@ namespace dm_bot.Services
                 return false;
             }
 
-            if (player.PlayerInventory == null || !player.PlayerInventory.Any(inventory => inventory.Item.Id == item.Id))
-            {
-                return false;
-            }
-
             var change = player.TotalWealth + (item.Cost * 0.5m);
 
             UpdatePlayerWealth(player, change);
-
-            player.PlayerInventory.Remove(player.PlayerInventory.First(inventory => inventory.Item.Id == item.Id));
 
             return true;
         }

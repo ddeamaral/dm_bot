@@ -26,7 +26,6 @@ namespace dm_bot.Commands
         {
             // find the player
             var user = _db.Players
-                .Include(p => p.PlayerInventory)
                 .FirstOrDefault(p => p.DiscordMention == Context.User.Mention);
 
             // If we didn't find one, redirect them to staff to add them
@@ -49,7 +48,7 @@ namespace dm_bot.Commands
 
             if (!int.TryParse(tokens[0], out itemId) || itemId == -1)
             {
-                await ReplyAsync($"Sorry, that item does not appear to exist. Use '$item find <item name>' to find the item id. Then use '$buy <item id>'.");
+                await ReplyAsync($"Sorry, that item does not appear to exist {Context.User.Mention}. Use '$item find <item name>' to find the item id. Then use '$buy <item id>'.");
                 return;
 
             }
@@ -58,7 +57,7 @@ namespace dm_bot.Commands
 
             if (item == null)
             {
-                await ReplyAsync($"Sorry, that item does not appear to exist. Use $item find <item name> to find the item id. Then use $buy <item id>.");
+                await ReplyAsync($"Sorry, that item does not appear to exist {Context.User.Mention}. Use $item find <item name> to find the item id. Then use $buy <item id>.");
                 return;
             }
 
