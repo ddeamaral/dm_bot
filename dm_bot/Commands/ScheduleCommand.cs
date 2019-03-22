@@ -31,9 +31,15 @@ namespace dm_bot.Commands
             {
                 var tokens = message.Split(" ");
 
-                // $schedule list
+                // $schedule list OR $schedule help
                 if (tokens.Length == 1 && !string.IsNullOrWhiteSpace(tokens[0]))
                 {
+                    if (tokens[0].ToLower() == "help")
+                    {
+                        await PrintHelp();
+                        return;
+                    }
+
                     var allAvailabilities = _db.DungeonMasterAvailabilities
                         .Include(dm => dm.TaggedRanks)
                         .Include(dm => dm.Jobs)
@@ -94,13 +100,38 @@ namespace dm_bot.Commands
 
             return dungeonMasterAvailability;
         }
+        private async Task PrintHelp()
+        {
+
+            var sb = new StringBuilder();
+
+            sb.AppendLine("To schedule a game, use the following command `$schedule` with the following options:");
+            sb.AppendLine("**Required data**:");
+            sb.AppendLine("TIMELINK=<Chronus link>");
+            sb.AppendLine("MIN=<Min Hours for session>");
+            sb.AppendLine("MAX=<Max Hours for session>");
+            sb.AppendLine("DATE=<Date in MM/DD/YYYY>");
+            sb.AppendLine("TIME=<Time in 24 hour HH:MM [AM/PM]>");
+            sb.AppendLine("TZ=<Your time zone>");
+            sb.AppendLine("JOBS=<Job Ids separated by commas (no spaces, use $jobs list for id)>");
+            sb.AppendLine("RANKS=<Rank letters separated by commas (no spaces)>");
+            sb.AppendLine("VOICE=<Voice channel>");
+            sb.AppendLine("SESSION=<Text chat channel>");
+            sb.AppendLine("**Optional data**:");
+            sb.AppendLine("RP=<RP %>");
+            sb.AppendLine("COMBAT=<Combat %>");
+
+            sb.AppendLine("**Example**: !dm schedule TIMELINK=http://a.chronus.eu/18AC248 SESSION=Session10 VOICE=VC10 MIN=4 MAX=4 RP=40 COMBAT=60 JOBS=1,2,3 RANKS=A,F");
+
+            await ReplyAsync(sb.ToString());
+        }
 
         private async Task<DungeonMasterAvailability> ObjectFromDictionary(Dictionary<string, string> dictionary)
         {
             var dm = new DungeonMasterAvailability();
 
             dm.ChronusTimeLink = dictionary.ContainsKey("TIMELINK") ? dictionary["TIMELINK"] : null;
-            dm.RoleplayingPercent = dictionary["TIMELINK"].ParseInt(-1);
+            dm.RoleplayingPercent = dictionary["RP"].ParseInt(-1);
             dm.MaxHours = dictionary.ContainsKey("MAX") ? dictionary["MAX"].ParseInt() : -1;
             dm.MinHours = dictionary.ContainsKey("MIN") ? dictionary["MIN"].ParseInt() : -1;
             dm.CombatPercent = dictionary.ContainsKey("COMBAT") ? dictionary["COMBAT"].ParseInt() : -1;

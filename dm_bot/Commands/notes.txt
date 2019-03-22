@@ -1,0 +1,25 @@
+Trade question answers:
+Player needs to be able to repost an auction
+
+
+Admins can edit players gold directly:
+Make the admins only be able to add remove in a certain channel
+
+Parrot back all commands that are run
+
+Also track pips via the same command 
+
+$moderate [gold|pips] amount
+
+switch to postgres
+
+quartermaster equipment is stuff in the players handbook
+magic items is a separate list
+
+(Trade)
+Minimum Selling Prices:
+Common: 10 gp
+Uncommon: 100 gp
+Rare: 2,000 gp
+Very Rare: 10,000 gp
+Legendary: 50,000 gp

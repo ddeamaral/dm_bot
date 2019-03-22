@@ -41,6 +41,7 @@ namespace dm_bot.Commands
         [Command("trade")]
         public async Task TradeAsync(string command = "list", [Remainder] string message = null)
         {
+
             var tokens = message?.Split(" ");
 
             if (!(tokens.Length > 1) && string.IsNullOrWhiteSpace(tokens[0]))
@@ -48,11 +49,10 @@ namespace dm_bot.Commands
                 var operation = tokens[0];
                 switch (operation.ToLower())
                 {
+                    case "post":
+                        break;
                     case "buy":
-                        break;
-                    case "sell":
-                        break;
-                    case "info":
+
                         break;
                     case "list":
                         break;

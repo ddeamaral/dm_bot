@@ -38,19 +38,19 @@ namespace dm_bot.Commands
 
             if (item == null)
             {
-                await ReplyAsync($"Sorry, that item does not appear to exist. Use $item find <item name> to find the item id. Then use $buy <item id>.");
+                await ReplyAsync($"Sorry, that item does not appear to exist. Use `$item find <item name>` to find the item id. Then use `$buy <item id>`.");
                 return;
             }
 
             if (item.IsTradeOnly)
             {
-                await ReplyAsync($"Sorry, {item.Name} can't be bought {Context.User.Mention}. You could see if someone has it and wants to trade.");
+                await ReplyAsync($"Sorry, {item.Name} can't be sold {Context.User.Mention}. You could see if someone has posted it for trade! use `$trade help` for more info.");
                 return;
             }
 
             if (!_tradeService.Sell(user, item))
             {
-                await ReplyAsync($"Sorry, item could not be sold {Context.User.Mention}, please double check you have done it correctly. You have {user.Gold}gp, {user.Silver}sp, {user.Electrum}ep, {user.Copper}");
+                await ReplyAsync($"Sorry, item could not be sold {Context.User.Mention}, please double check you have done it correctly. You have {user.DisplayWealth}");
                 return;
             }
 
