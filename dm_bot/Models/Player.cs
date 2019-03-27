@@ -5,6 +5,8 @@ namespace dm_bot.Models
 {
     public class Player
     {
+        public ulong UserId;
+
         [Key]
         public int Id { get; set; }
 
@@ -19,6 +21,8 @@ namespace dm_bot.Models
         public decimal Copper { get; set; }
 
         public decimal Electrum { get; set; }
+
+        public int Pips { get; set; }
 
         public decimal TotalWealth
         {

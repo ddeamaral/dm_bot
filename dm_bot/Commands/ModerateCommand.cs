@@ -1,6 +1,10 @@
 using System;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using dm_bot.Contexts;
+using dm_bot.Models;
+using dm_bot.Services;
 using Discord.Commands;
 using Discord.WebSocket;
 
@@ -8,17 +12,41 @@ namespace dm_bot.Commands
 {
     public class ModerateCommand : ModuleBase<SocketCommandContext>
     {
+        private readonly DMContext _db;
+
+        public ModerateCommand(DMContext _db)
+        {
+            this._db = _db;
+        }
+
         [Command("moderate")]
         public async Task ModerateAsync(SocketUser targetUser, string moderateType, string data, [Remainder] string message = null)
         {
-            switch (moderateType.ToLower().Trim())
+            var player = _db.Players.FirstOrDefault(p => p.UserId == targetUser.Id);
+
+            if (player == null)
+            {
+                await ReplyAsync($"Could not find {targetUser.Mention} in the system. Please use the `$register help` command for more information.");
+                return;
+            }
+
+            var amount = ParseAmount(data);
+
+            if (amount == -decimal.MinValue)
+            {
+                await ReplyAsync($"Could not parse amount for {targetUser.Mention}, please double check your command is correct {Context.User.Mention}");
+                return;
+            }
+
+            var operation = moderateType.ToLower().Trim();
+
+            switch (operation)
             {
                 case "pips":
-                    await CalculatePlayerPips(targetUser);
+                    await AddPipsToPlayer(player, amount);
                     break;
                 case "gold":
-                    await CalculatePlayerGold(targetUser);
-                    await EchoGoldCalculation();
+                    await AddGoldToPlayer(player, amount);
                     break;
 
                 case "help":
@@ -27,6 +55,22 @@ namespace dm_bot.Commands
                 default:
                     break;
             }
+            if (operation == "pips" || operation == "gold")
+            {
+                await EchoOperation(player, Context.User, amount, operation);
+            }
+        }
+
+        private decimal ParseAmount(string data)
+        {
+            decimal amount = 0;
+
+            if (!decimal.TryParse(data, out amount))
+            {
+                return -decimal.MinValue;
+            }
+
+            return amount;
         }
 
         private async Task ShowHelpMessage()
@@ -39,19 +83,35 @@ namespace dm_bot.Commands
             await ReplyAsync(sb.ToString());
         }
 
-        private Task EchoGoldCalculation()
+        private async Task EchoOperation(Player player, SocketUser user, decimal amount, string amountType)
         {
+            var sb = new StringBuilder();
 
+            sb.AppendLine($"{user.Mention} has {(amount > 0 ? "given" : "taken")} {amount} {amountType} to {player.DiscordMention}");
+
+            await ReplyAsync(sb.ToString());
         }
 
-        private Task CalculatePlayerGold(SocketUser user)
+        private async Task AddGoldToPlayer(Player user, decimal amount)
         {
-            throw new NotImplementedException();
+            var ps = new PlayerService();
+
+            ps.AddGold(user, amount);
+
+            _db.Players.Update(user);
+
+            await _db.SaveChangesAsync();
         }
 
-        private Task CalculatePlayerPips(SocketUser user)
+        private async Task AddPipsToPlayer(Player user, decimal amount)
         {
-            throw new NotImplementedException();
+            var ps = new PlayerService();
+
+            ps.AddPips(user, amount);
+
+            _db.Players.Update(user);
+
+            await _db.SaveChangesAsync();
         }
     }
 }
