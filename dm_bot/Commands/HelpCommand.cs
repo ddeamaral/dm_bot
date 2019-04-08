@@ -29,6 +29,7 @@ namespace dm_bot.Commands
             helpStringBuilder.AppendLine("Available commands with individual help options:");
             helpStringBuilder.AppendLine("$jobs help");
             helpStringBuilder.AppendLine("$buy help");
+            helpStringBuilder.AppendLine("$moderate help");
 
             await ReplyAsync(helpStringBuilder.ToString());
         }

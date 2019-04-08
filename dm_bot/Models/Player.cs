@@ -5,10 +5,10 @@ namespace dm_bot.Models
 {
     public class Player
     {
-        public ulong UserId;
-
         [Key]
         public int Id { get; set; }
+
+        public ulong UserId;
 
         public string CharacterName { get; set; }
 
