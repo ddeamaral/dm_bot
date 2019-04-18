@@ -39,8 +39,6 @@ namespace dm_bot.Models
             }
         }
 
-        public string RoleIds { get; set; }
-
         public string DisplayWealth => $"{this.Gold}gp {this.Electrum}ep {this.Silver}sp {this.Copper}cp";
     }
 }

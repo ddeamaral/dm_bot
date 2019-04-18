@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using dm_bot.Models;
@@ -19,7 +20,7 @@ namespace dm_bot.Contexts
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite("Data Source=dm.db");
+            optionsBuilder.UseNpgsql(Environment.GetEnvironmentVariable("DM_BOT_CONNECTION"));
         }
 
         public void SeedDatabase()

@@ -16,7 +16,7 @@ namespace dm_bot.Models
             Time: {dmRequest.ChronusTimeLink} ({dmRequest.MinHours} - {dmRequest.MaxHours} hours)
             {(dmRequest.RoleplayingPercent > 0 || dmRequest.CombatPercent > 0 ? $"Combat: {dmRequest.CombatPercent}%, RP: {dmRequest.RoleplayingPercent}" : "")} 
             Comms: #{dmRequest.ChatCommChannel} #{dmRequest.VoiceCommChannel}
-            Jobs willing to run: {JobFormatString (dmRequest.Jobs)}
+            Jobs willing to run: {JobFormatString (dmRequest.ScheduledJobs)}
             Applicable Ranks: {RankFormatString (dmRequest.TaggedRanks.ToList())}";
         }
 

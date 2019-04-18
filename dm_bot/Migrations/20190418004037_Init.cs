@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace dm_bot.Migrations
 {
@@ -12,7 +13,7 @@ namespace dm_bot.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     DungeonMasterUserName = table.Column<string>(nullable: true),
                     ChronusTimeLink = table.Column<string>(nullable: true),
                     ChatCommChannel = table.Column<string>(nullable: true),
@@ -21,7 +22,10 @@ namespace dm_bot.Migrations
                     MaxHours = table.Column<int>(nullable: false),
                     RoleplayingPercent = table.Column<int>(nullable: false),
                     CombatPercent = table.Column<int>(nullable: false),
-                    PlayDate = table.Column<DateTime>(nullable: false)
+                    Roll20Link = table.Column<string>(nullable: true),
+                    PlayDate = table.Column<DateTime>(nullable: false),
+                    PlayDateOffset = table.Column<DateTimeOffset>(nullable: false),
+                    MiscellaneousText = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -33,7 +37,7 @@ namespace dm_bot.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     Name = table.Column<string>(nullable: true),
                     GoldCost = table.Column<decimal>(nullable: false),
                     CopperCost = table.Column<decimal>(nullable: false),
@@ -52,14 +56,14 @@ namespace dm_bot.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     CharacterName = table.Column<string>(nullable: true),
                     DiscordMention = table.Column<string>(nullable: true),
                     Gold = table.Column<decimal>(nullable: false),
                     Silver = table.Column<decimal>(nullable: false),
                     Copper = table.Column<decimal>(nullable: false),
                     Electrum = table.Column<decimal>(nullable: false),
-                    RoleIds = table.Column<string>(nullable: true)
+                    Pips = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -71,7 +75,7 @@ namespace dm_bot.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     Title = table.Column<string>(nullable: true),
                     Description = table.Column<string>(nullable: true),
                     JobLink = table.Column<string>(nullable: true),
@@ -95,7 +99,7 @@ namespace dm_bot.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     RankName = table.Column<string>(nullable: true),
                     RankLetter = table.Column<string>(nullable: true),
                     DungeonMasterAvailabilityId = table.Column<int>(nullable: true)
@@ -104,49 +108,12 @@ namespace dm_bot.Migrations
                 {
                     table.PrimaryKey("PK_Ranks", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Ranks_DungeonMasterAvailabilities_DungeonMasterAvailabilityId",
+                        name: "FK_Ranks_DungeonMasterAvailabilities_DungeonMasterAvailability~",
                         column: x => x.DungeonMasterAvailabilityId,
                         principalTable: "DungeonMasterAvailabilities",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
-
-            migrationBuilder.CreateTable(
-                name: "InventoryItem",
-                columns: table => new
-                {
-                    ID = table.Column<int>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Quantity = table.Column<int>(nullable: false),
-                    ItemId = table.Column<int>(nullable: true),
-                    PlayerId = table.Column<int>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_InventoryItem", x => x.ID);
-                    table.ForeignKey(
-                        name: "FK_InventoryItem_Items_ItemId",
-                        column: x => x.ItemId,
-                        principalTable: "Items",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_InventoryItem_Players_PlayerId",
-                        column: x => x.PlayerId,
-                        principalTable: "Players",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_InventoryItem_ItemId",
-                table: "InventoryItem",
-                column: "ItemId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_InventoryItem_PlayerId",
-                table: "InventoryItem",
-                column: "PlayerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Jobs_DungeonMasterAvailabilityId",
@@ -162,19 +129,16 @@ namespace dm_bot.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "InventoryItem");
+                name: "Items");
 
             migrationBuilder.DropTable(
                 name: "Jobs");
 
             migrationBuilder.DropTable(
-                name: "Ranks");
-
-            migrationBuilder.DropTable(
-                name: "Items");
-
-            migrationBuilder.DropTable(
                 name: "Players");
+
+            migrationBuilder.DropTable(
+                name: "Ranks");
 
             migrationBuilder.DropTable(
                 name: "DungeonMasterAvailabilities");

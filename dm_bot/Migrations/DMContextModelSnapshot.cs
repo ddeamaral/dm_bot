@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using dm_bot.Contexts;
 
 namespace dm_bot.Migrations
@@ -14,7 +15,9 @@ namespace dm_bot.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "2.2.2-servicing-10034");
+                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn)
+                .HasAnnotation("ProductVersion", "2.2.2-servicing-10034")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             modelBuilder.Entity("dm_bot.Models.DungeonMasterAvailability", b =>
                 {
@@ -33,35 +36,21 @@ namespace dm_bot.Migrations
 
                     b.Property<int>("MinHours");
 
+                    b.Property<string>("MiscellaneousText");
+
                     b.Property<DateTime>("PlayDate");
 
+                    b.Property<DateTimeOffset>("PlayDateOffset");
+
                     b.Property<int>("RoleplayingPercent");
+
+                    b.Property<string>("Roll20Link");
 
                     b.Property<string>("VoiceCommChannel");
 
                     b.HasKey("Id");
 
                     b.ToTable("DungeonMasterAvailabilities");
-                });
-
-            modelBuilder.Entity("dm_bot.Models.InventoryItem", b =>
-                {
-                    b.Property<int>("ID")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<int?>("ItemId");
-
-                    b.Property<int?>("PlayerId");
-
-                    b.Property<int>("Quantity");
-
-                    b.HasKey("ID");
-
-                    b.HasIndex("ItemId");
-
-                    b.HasIndex("PlayerId");
-
-                    b.ToTable("InventoryItem");
                 });
 
             modelBuilder.Entity("dm_bot.Models.Item", b =>
@@ -127,7 +116,7 @@ namespace dm_bot.Migrations
 
                     b.Property<decimal>("Gold");
 
-                    b.Property<string>("RoleIds");
+                    b.Property<int>("Pips");
 
                     b.Property<decimal>("Silver");
 
@@ -154,21 +143,10 @@ namespace dm_bot.Migrations
                     b.ToTable("Ranks");
                 });
 
-            modelBuilder.Entity("dm_bot.Models.InventoryItem", b =>
-                {
-                    b.HasOne("dm_bot.Models.Item", "Item")
-                        .WithMany()
-                        .HasForeignKey("ItemId");
-
-                    b.HasOne("dm_bot.Models.Player")
-                        .WithMany("PlayerInventory")
-                        .HasForeignKey("PlayerId");
-                });
-
             modelBuilder.Entity("dm_bot.Models.Job", b =>
                 {
                     b.HasOne("dm_bot.Models.DungeonMasterAvailability")
-                        .WithMany("Jobs")
+                        .WithMany("ScheduledJobs")
                         .HasForeignKey("DungeonMasterAvailabilityId");
                 });
 
