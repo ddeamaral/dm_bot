@@ -42,7 +42,7 @@ namespace dm_bot.Commands
 
                     var allAvailabilities = _db.DungeonMasterAvailabilities
                         .Include(dm => dm.TaggedRanks)
-                        .Include(dm => dm.Jobs)
+                        .Include(dm => dm.ScheduledJobs)
                         .Where(dma => dma.PlayDate > DateTime.Today)
                         .ToArray();
 
@@ -161,7 +161,7 @@ namespace dm_bot.Commands
             dm.CombatPercent = dictionary.ContainsKey("COMBAT") ? dictionary["COMBAT"].ParseInt() : -1;
             dm.ChatCommChannel = dictionary.ContainsKey("SESSION") ? dictionary["SESSION"] : null;
             dm.VoiceCommChannel = dictionary.ContainsKey("VOICE") ? dictionary["VOICE"] : null;
-            dm.Jobs = ParseJobs(dictionary["JOBS"]);
+            dm.ScheduledJobs = ParseJobs(dictionary["JOBS"]);
             dm.Roll20Link = dictionary.ContainsKey("ROLL20LINK") ? dictionary["ROLL20LINK"] : null;
             dm.MiscellaneousText = dictionary.ContainsKey("MISC") ? dictionary["MISC"] : null;
 

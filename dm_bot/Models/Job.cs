@@ -1,7 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace dm_bot.Models
 {
+    [Owned]
     public class Job
     {
         [Key]

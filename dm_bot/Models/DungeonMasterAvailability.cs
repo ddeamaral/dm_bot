@@ -27,7 +27,7 @@ namespace dm_bot.Models
 
         public string Roll20Link { get; set; }
 
-        public ICollection<Job> Jobs { get; set; }
+        public ICollection<Job> ScheduledJobs { get; set; }
 
         public ICollection<Rank> TaggedRanks { get; set; }
 
