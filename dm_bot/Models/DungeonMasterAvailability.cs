@@ -25,11 +25,17 @@ namespace dm_bot.Models
 
         public int CombatPercent { get; set; }
 
+        public string Roll20Link { get; set; }
+
         public ICollection<Job> Jobs { get; set; }
 
         public ICollection<Rank> TaggedRanks { get; set; }
 
         public DateTime PlayDate { get; set; }
+
+        public DateTimeOffset PlayDateOffset { get; set; }
+
+        public string MiscellaneousText { get; set; }
 
     }
 }

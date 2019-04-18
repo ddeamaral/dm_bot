@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,10 +21,62 @@ namespace dm_bot.Commands
         }
 
         [Command("moderate")]
+        public async Task ModerateManyAsync(string moderateType, string data, [Remainder] string message = null)
+        {
+            List<SocketUser> users = new List<SocketUser>(this.Context.Message.MentionedUsers);
+
+            var userIds = users.Select(user => user.Id).ToList();
+
+            var dbUsers = _db.Players.Where(user => userIds.Contains(user.UserId)).ToList();
+
+            List<Player> newPlayers = new List<Player>();
+
+            // add users if don't exist
+            foreach (var user in users)
+            {
+                if (!dbUsers.Any(dbUser => dbUser.UserId == user.Id))
+                {
+                    // create a new one and add it to the list to be added
+                    var player = new Player()
+                    {
+                    DiscordMention = user.Mention,
+                    UserId = user.Id,
+                    Pips = 0,
+                    Copper = 0,
+                    Electrum = 0,
+                    Gold = 0,
+                    Silver = 0
+
+                    };
+
+                    newPlayers.Add(player);
+                }
+            }
+
+            if (newPlayers.Count > 0)
+            {
+                // add the list of new players to the database asynchronously
+                await _db.Players.AddRangeAsync(newPlayers);
+                await _db.SaveChangesAsync();
+            }
+
+            // Parse the request for each tagged user
+            foreach (var user in dbUsers)
+            {
+                await ParseRequest(user, users.FirstOrDefault(u => u.Id == user.UserId), moderateType, data);
+            }
+        }
+
+        [Command("moderate")]
         public async Task ModerateAsync(SocketUser targetUser, string moderateType, string data, [Remainder] string message = null)
         {
             var player = _db.Players.FirstOrDefault(p => p.UserId == targetUser.Id);
 
+            await ParseRequest(player, targetUser, moderateType, data);
+        }
+
+        private async Task ParseRequest(Player player, SocketUser targetUser, string moderateType, string data)
+        {
             if (player == null)
             {
                 await ReplyAsync($"Could not find {targetUser.Mention} in the system. Please use the `$register help` command for more information.");
@@ -55,6 +108,7 @@ namespace dm_bot.Commands
                 default:
                     break;
             }
+
             if (operation == "pips" || operation == "gold")
             {
                 await EchoOperation(player, Context.User, amount, operation);

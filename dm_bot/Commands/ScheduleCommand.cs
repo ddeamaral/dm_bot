@@ -68,6 +68,12 @@ namespace dm_bot.Commands
 
         private async Task RespondWithAvailabilities(DungeonMasterAvailability[] allAvailabilities)
         {
+            if (allAvailabilities.Length == 0)
+            {
+                await ReplyAsync("There are no games scheduled for the future right now");
+                return;
+            }
+
             var sb = new StringBuilder();
 
             foreach (var dmAvail in allAvailabilities)
@@ -87,19 +93,36 @@ namespace dm_bot.Commands
             var tokens = message.Split(" ");
             var requestAttributes = new Dictionary<string, string>();
 
+            var sb = new StringBuilder();
+
+            // loop through tokens split on space characters
             foreach (var token in tokens)
             {
+                // if it contains an = character, then it is a named argument
                 if (token.Contains("="))
                 {
                     var pair = token.Split('=');
                     requestAttributes.Add(pair[0], pair[1]);
                 }
+                else
+                {
+                    // This must be the description at the end, join the rest
+                    sb.Append($" {token}");
+                }
             }
+
+            // Allows some free form text at the end of the message
+            requestAttributes["MISC"] = sb.ToString();
 
             dungeonMasterAvailability = await ObjectFromDictionary(requestAttributes);
 
             return dungeonMasterAvailability;
         }
+
+        /// <summary>
+        /// Prints the help message
+        /// </summary>
+        /// <returns>An awaitable task</returns>
         private async Task PrintHelp()
         {
 
@@ -117,11 +140,12 @@ namespace dm_bot.Commands
             sb.AppendLine("RANKS=<Rank letters separated by commas (no spaces)>");
             sb.AppendLine("VOICE=<Voice channel>");
             sb.AppendLine("SESSION=<Text chat channel>");
+            sb.AppendLine("ROLL20=<roll20 game link>");
             sb.AppendLine("**Optional data**:");
             sb.AppendLine("RP=<RP %>");
             sb.AppendLine("COMBAT=<Combat %>");
 
-            sb.AppendLine("**Example**: !dm schedule TIMELINK=http://a.chronus.eu/18AC248 SESSION=Session10 VOICE=VC10 MIN=4 MAX=4 RP=40 COMBAT=60 JOBS=1,2,3 RANKS=A,F");
+            sb.AppendLine("**Example**: $schedule TIMELINK=http://a.chronus.eu/18AC248 SESSION=Session10 VOICE=VC10 MIN=4 MAX=4 RP=40 COMBAT=60 JOBS=1,2,3 RANKS=A,F Then here is some additional content you can have that will just show up here.");
 
             await ReplyAsync(sb.ToString());
         }
@@ -138,9 +162,12 @@ namespace dm_bot.Commands
             dm.ChatCommChannel = dictionary.ContainsKey("SESSION") ? dictionary["SESSION"] : null;
             dm.VoiceCommChannel = dictionary.ContainsKey("VOICE") ? dictionary["VOICE"] : null;
             dm.Jobs = ParseJobs(dictionary["JOBS"]);
+            dm.Roll20Link = dictionary.ContainsKey("ROLL20LINK") ? dictionary["ROLL20LINK"] : null;
+            dm.MiscellaneousText = dictionary.ContainsKey("MISC") ? dictionary["MISC"] : null;
 
             var hasDateParts = dictionary.ContainsKey("DATE") && dictionary.ContainsKey("TIME") && dictionary.ContainsKey("TZ");
 
+            // Parse out the date for the game to expire
             if (hasDateParts)
             {
                 var playDate = $"{dictionary["DATE"]} {dictionary["TIME"]}";
@@ -148,6 +175,7 @@ namespace dm_bot.Commands
 
                 if (DateTime.TryParse(playDate, out dt))
                 {
+                    dm.PlayDateOffset = new DateTimeOffset(dt);
                     dm.PlayDate = (DateTime) TimeZoneConversionService.ToUtc(dt);
                 }
                 else
@@ -156,6 +184,7 @@ namespace dm_bot.Commands
                 }
             }
 
+            // Parse out what ranks the scheduled jobs pertain to
             if (dictionary.ContainsKey("RANKS"))
             {
                 dm.TaggedRanks = ParseRanks(dictionary["RANKS"]);
