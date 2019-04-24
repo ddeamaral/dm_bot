@@ -260,3 +260,5 @@ paket-files/
 __pycache__/
 *.pyc
 *.db
+dm_bot_workspace.code-workspace
+dm_bot/.vscode/*
