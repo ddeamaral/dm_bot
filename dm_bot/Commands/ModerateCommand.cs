@@ -11,33 +11,37 @@ using Discord.WebSocket;
 
 namespace dm_bot.Commands
 {
+    /// <summary>
+    /// Command for moderating how much gold/pips each player has
+    /// </summary>
+    /// <typeparam name="SocketCommandContext"></typeparam>
     public class ModerateCommand : ModuleBase<SocketCommandContext>
     {
         private readonly DMContext _db;
 
-        public ModerateCommand(DMContext _db)
+        public ModerateCommand (DMContext _db)
         {
             this._db = _db;
         }
 
-        [Command("moderate")]
-        public async Task ModerateManyAsync(string moderateType, string data, [Remainder] string message = null)
+        [Command ("moderate")]
+        public async Task ModerateManyAsync (string moderateType, string data, [Remainder] string message = null)
         {
-            List<SocketUser> users = new List<SocketUser>(this.Context.Message.MentionedUsers);
+            List<SocketUser> users = new List<SocketUser> (this.Context.Message.MentionedUsers);
 
-            var userIds = users.Select(user => user.Id).ToList();
+            var userIds = users.Select (user => user.Id).ToList ();
 
-            var dbUsers = _db.Players.Where(user => userIds.Contains(user.UserId)).ToList();
+            var dbUsers = _db.Players.Where (user => userIds.Contains (user.UserId)).ToList ();
 
-            List<Player> newPlayers = new List<Player>();
+            List<Player> newPlayers = new List<Player> ();
 
             // add users if don't exist
             foreach (var user in users)
             {
-                if (!dbUsers.Any(dbUser => dbUser.UserId == user.Id))
+                if (!dbUsers.Any (dbUser => dbUser.UserId == user.Id))
                 {
                     // create a new one and add it to the list to be added
-                    var player = new Player()
+                    var player = new Player ()
                     {
                     DiscordMention = user.Mention,
                     UserId = user.Id,
@@ -49,61 +53,62 @@ namespace dm_bot.Commands
 
                     };
 
-                    newPlayers.Add(player);
+                    newPlayers.Add (player);
                 }
             }
 
             if (newPlayers.Count > 0)
             {
                 // add the list of new players to the database asynchronously
-                await _db.Players.AddRangeAsync(newPlayers);
-                await _db.SaveChangesAsync();
+                await _db.Players.AddRangeAsync (newPlayers);
+                await _db.SaveChangesAsync ();
             }
 
             // Parse the request for each tagged user
             foreach (var user in dbUsers)
             {
-                await ParseRequest(user, users.FirstOrDefault(u => u.Id == user.UserId), moderateType, data);
+                await ParseRequest (user, users.FirstOrDefault (u => u.Id == user.UserId), moderateType, data);
             }
         }
 
-        [Command("moderate")]
-        public async Task ModerateAsync(SocketUser targetUser, string moderateType, string data, [Remainder] string message = null)
+        [Command ("moderate")]
+        public async Task ModerateAsync (SocketUser targetUser, string moderateType, string data, [Remainder] string message = null)
         {
-            var player = _db.Players.FirstOrDefault(p => p.UserId == targetUser.Id);
+            var player = _db.Players.FirstOrDefault (p => p.UserId == targetUser.Id);
 
-            await ParseRequest(player, targetUser, moderateType, data);
+            await ParseRequest (player, targetUser, moderateType, data);
         }
 
-        private async Task ParseRequest(Player player, SocketUser targetUser, string moderateType, string data)
+        private async Task ParseRequest (Player player, SocketUser targetUser, string moderateType, string data)
         {
             if (player == null)
             {
-                await ReplyAsync($"Could not find {targetUser.Mention} in the system. Please use the `$register help` command for more information.");
+                await ReplyAsync ($"Could not find {targetUser.Mention} in the system. Please use the `$register help` command for more information.");
                 return;
             }
 
-            var amount = ParseAmount(data);
+            var amount = ParseAmount (data);
 
             if (amount == -decimal.MinValue)
             {
-                await ReplyAsync($"Could not parse amount for {targetUser.Mention}, please double check your command is correct {Context.User.Mention}");
+                await ReplyAsync ($"Could not parse amount for {targetUser.Mention}, please double check your command is correct {Context.User.Mention}");
                 return;
             }
 
-            var operation = moderateType.ToLower().Trim();
+            var operation = moderateType.ToLower ().Trim ();
 
             switch (operation)
             {
                 case "pips":
-                    await AddPipsToPlayer(player, amount);
+                    await AddPipsToPlayer (player, amount);
                     break;
+
                 case "gold":
-                    await AddGoldToPlayer(player, amount);
+                    await AddGoldToPlayer (player, amount);
                     break;
 
                 case "help":
-                    await ShowHelpMessage();
+                    await ShowHelpMessage ();
                     break;
                 default:
                     break;
@@ -111,15 +116,15 @@ namespace dm_bot.Commands
 
             if (operation == "pips" || operation == "gold")
             {
-                await EchoOperation(player, Context.User, amount, operation);
+                await EchoOperation (player, Context.User, amount, operation);
             }
         }
 
-        private decimal ParseAmount(string data)
+        private decimal ParseAmount (string data)
         {
             decimal amount = 0;
 
-            if (!decimal.TryParse(data, out amount))
+            if (!decimal.TryParse (data, out amount))
             {
                 return -decimal.MinValue;
             }
@@ -127,45 +132,45 @@ namespace dm_bot.Commands
             return amount;
         }
 
-        private async Task ShowHelpMessage()
+        private async Task ShowHelpMessage ()
         {
-            var sb = new StringBuilder();
+            var sb = new StringBuilder ();
 
-            sb.AppendLine("Use `$moderate <@ Mention User> gold <gold amount (prefix with + or - i.e. -100gp or +100gp)>` to modify a users gold.");
-            sb.AppendLine("Use `$moderate <@ Mention User> pips <pip amount (prefix with + or - i.e. -1 or +1)>` to modify a users pips.");
+            sb.AppendLine ("Use `$moderate <@ Mention User> gold <gold amount (prefix with + or - i.e. -100gp or +100gp)>` to modify a users gold.");
+            sb.AppendLine ("Use `$moderate <@ Mention User> pips <pip amount (prefix with + or - i.e. -1 or +1)>` to modify a users pips.");
 
-            await ReplyAsync(sb.ToString());
+            await ReplyAsync (sb.ToString ());
         }
 
-        private async Task EchoOperation(Player player, SocketUser user, decimal amount, string amountType)
+        private async Task EchoOperation (Player player, SocketUser user, decimal amount, string amountType)
         {
-            var sb = new StringBuilder();
+            var sb = new StringBuilder ();
 
-            sb.AppendLine($"{user.Mention} has {(amount > 0 ? "given" : "taken")} {amount} {amountType} to {player.DiscordMention}");
+            sb.AppendLine ($"{user.Mention} has {(amount > 0 ? "given" : "taken")} {amount} {amountType} to {player.DiscordMention}");
 
-            await ReplyAsync(sb.ToString());
+            await ReplyAsync (sb.ToString ());
         }
 
-        private async Task AddGoldToPlayer(Player user, decimal amount)
+        private async Task AddGoldToPlayer (Player user, decimal amount)
         {
-            var ps = new PlayerService();
+            var ps = new PlayerService ();
 
-            ps.AddGold(user, amount);
+            ps.AddGold (user, amount);
 
-            _db.Players.Update(user);
+            _db.Players.Update (user);
 
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync ();
         }
 
-        private async Task AddPipsToPlayer(Player user, decimal amount)
+        private async Task AddPipsToPlayer (Player user, decimal amount)
         {
-            var ps = new PlayerService();
+            var ps = new PlayerService ();
 
-            ps.AddPips(user, amount);
+            ps.AddPips (user, amount);
 
-            _db.Players.Update(user);
+            _db.Players.Update (user);
 
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync ();
         }
     }
 }

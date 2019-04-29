@@ -18,5 +18,9 @@ namespace dm_bot.Models
         public string Author { get; set; }
 
         public int Difficulty { get; set; }
+
+        public string FirstApproval { get; set; }
+
+        public string SecondApproval { get; set; }
     }
 }

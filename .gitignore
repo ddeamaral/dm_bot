@@ -262,3 +262,4 @@ __pycache__/
 *.db
 dm_bot_workspace.code-workspace
 dm_bot/.vscode/*
+workspace.code-workspace
