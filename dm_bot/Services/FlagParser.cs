@@ -40,17 +40,25 @@ namespace dm_bot.Services
 
                 for (int i = 0; i < flagIndexes.Count; i++)
                 {
+                    var flagIndex = flagIndexes[i].flagIndex;
+
                     // Get the last flag, without going out of range i.e. -add txt (-list more txt)
                     if (i == flagIndexes.Count - 1)
                     {
-                        var lastFlagMessage = message.Substring (flagIndexes[i].flagIndex, message.Length - flagIndexes[i].flagIndex);
+                        var lastFlagIndex = message.Length - flagIndexes[i].flagIndex;
+                        var lastFlagMessage = message
+                            .Substring (flagIndex, lastFlagIndex)
+                            .Replace ($"-{flagIndexes[i].flag}", "")
+                            .Trim ();
+
                         results.Add (flagIndexes[i].flag, lastFlagMessage);
 
                         continue;
                     }
 
                     // Get all other flags but the last
-                    var text = message.Substring (flagIndexes[i].flagIndex, flagIndexes[i + 1].flagIndex);
+                    int nextFlagIndex = flagIndexes[i + 1].flagIndex;
+                    var text = message.Substring (flagIndex, nextFlagIndex - flagIndex).Replace ($"-{flagIndexes[i].flag}", "").Trim ();
                     results.Add (flagIndexes[i].flag, text);
                 }
             }
