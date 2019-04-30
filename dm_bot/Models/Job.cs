@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,5 +23,7 @@ namespace dm_bot.Models
         public string FirstApproval { get; set; }
 
         public string SecondApproval { get; set; }
+
+        public ICollection<Rank> TaggedRanks { get; set; }
     }
 }

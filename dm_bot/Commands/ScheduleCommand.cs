@@ -41,7 +41,6 @@ namespace dm_bot.Commands
                     }
 
                     var allAvailabilities = _db.DungeonMasterAvailabilities
-                        .Include (dm => dm.TaggedRanks)
                         .Include (dm => dm.ScheduledJobs)
                         .Where (dma => dma.PlayDate > DateTime.Today)
                         .ToArray ();
@@ -88,33 +87,25 @@ namespace dm_bot.Commands
 
         public async Task<DungeonMasterAvailability> ParseScheduleRequest (string message)
         {
-            var dungeonMasterAvailability = new DungeonMasterAvailability ();
-
-            var tokens = message.Split (" ");
-            var requestAttributes = new Dictionary<string, string> ();
-
-            var sb = new StringBuilder ();
-
-            // loop through tokens split on space characters
-            foreach (var token in tokens)
+            var flagParser = new FlagParser (flags: new List<string> ()
             {
-                // if it contains an = character, then it is a named argument
-                if (token.Contains ("="))
-                {
-                    var pair = token.Split ('=');
-                    requestAttributes.Add (pair[0], pair[1]);
-                }
-                else
-                {
-                    // This must be the description at the end, join the rest
-                    sb.Append ($" {token}");
-                }
-            }
+                "time",
+                "rp",
+                "max",
+                "min",
+                "combat",
+                "voice",
+                "roll20",
+                "misc",
+                "date",
+                "tz",
+                "session",
+                "jobs"
+            });
 
-            // Allows some free form text at the end of the message
-            requestAttributes["MISC"] = sb.ToString ();
+            var dictionary = flagParser.ParseMessage (message);
 
-            dungeonMasterAvailability = await ObjectFromDictionary (requestAttributes);
+            var dungeonMasterAvailability = await ObjectFromDictionary (dictionary);
 
             return dungeonMasterAvailability;
         }
@@ -154,22 +145,6 @@ namespace dm_bot.Commands
         {
             var dm = new DungeonMasterAvailability ();
 
-            var flagParser = new FlagParser (new List<string> ()
-            {
-                "time",
-                "rp",
-                "max",
-                "min",
-                "combat",
-                "voice",
-                "roll20",
-                "misc",
-                "date",
-                "tz",
-                "session",
-                "jobs"
-            });
-
             dm.ChronusTimeLink = dictionary.ContainsKey ("TIMELINK") ? dictionary["TIMELINK"] : null;
             dm.RoleplayingPercent = dictionary["RP"].ParseInt (-1);
             dm.MaxHours = dictionary.ContainsKey ("MAX") ? dictionary["MAX"].ParseInt () : -1;
@@ -200,12 +175,6 @@ namespace dm_bot.Commands
                 }
             }
 
-            // Parse out what ranks the scheduled jobs pertain to
-            if (dictionary.ContainsKey ("RANKS"))
-            {
-                dm.TaggedRanks = ParseRanks (dictionary["RANKS"]);
-            }
-
             await _db.DungeonMasterAvailabilities.AddAsync (dm);
 
             await _db.SaveChangesAsync ();
@@ -218,20 +187,6 @@ namespace dm_bot.Commands
             var jobs = jobString.Split (",").Select (jobId => int.Parse (jobId));
 
             return _db.Jobs.Where (job => jobs.Contains (job.Id)).ToList ();
-        }
-
-        private ICollection<Rank> ParseRanks (string rankString)
-        {
-            var ranks = _db.Ranks.ToDictionary (r => r.RankLetter, r => r);
-
-            var returnRanks = new List<Rank> ();
-
-            foreach (var rankLetter in rankString.Split (","))
-            {
-                returnRanks.Add (ranks[rankLetter]);
-            }
-
-            return returnRanks;
         }
     }
 }

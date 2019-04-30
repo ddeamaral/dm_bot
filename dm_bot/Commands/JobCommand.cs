@@ -11,6 +11,7 @@ using dm_bot.Services;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.EntityFrameworkCore;
 
 namespace dm_bot.Commands
 {
@@ -65,7 +66,7 @@ namespace dm_bot.Commands
                         await ListJobs ();
                         break;
                     case "approve":
-                        await ApproveJob (m);
+                        await ApproveJob (results);
                         break;
                     case "link":
                         await LinkJob (m);
@@ -90,9 +91,27 @@ namespace dm_bot.Commands
             throw new NotImplementedException ();
         }
 
-        private Task ApproveJob (string m)
+        private async Task ApproveJob (Dictionary<string, string> request)
         {
-            throw new NotImplementedException ();
+            var user = this.Context.User as SocketGuildUser;
+            if (user.Roles.Any (role => role.Name == ""))
+            {
+                var jobid = request["jobid"].ParseInt ();
+                var job = _db.Jobs.FirstOrDefault (j => j.Id == jobid);
+
+                if (job is null)
+                {
+                    await ReplyAsync ($"Sorry {user.Mention}, I could not find that job, please ensure your job id is correct");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace (job.FirstApproval))
+                {
+                    job.FirstApproval = user.Mention;
+                    _db.Entry (job).State = EntityState.Modified;
+                    await _db.SaveChangesAsync ();
+                }
+            }
         }
 
         private async Task AddNewJob (string message)

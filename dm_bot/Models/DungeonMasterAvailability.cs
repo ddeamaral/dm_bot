@@ -29,7 +29,6 @@ namespace dm_bot.Models
 
         public ICollection<Job> ScheduledJobs { get; set; }
 
-        public ICollection<Rank> TaggedRanks { get; set; }
 
         public DateTime PlayDate { get; set; }
 

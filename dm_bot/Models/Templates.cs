@@ -9,7 +9,7 @@ namespace dm_bot.Models
     public class Templates
     {
 
-        public static string AvailabilityResponse(DungeonMasterAvailability dmRequest)
+        public static string AvailabilityResponse (DungeonMasterAvailability dmRequest)
         {
             return $@"
             DM:{dmRequest.DungeonMasterUserName}
@@ -17,31 +17,31 @@ namespace dm_bot.Models
             {(dmRequest.RoleplayingPercent > 0 || dmRequest.CombatPercent > 0 ? $"Combat: {dmRequest.CombatPercent}%, RP: {dmRequest.RoleplayingPercent}" : "")} 
             Comms: #{dmRequest.ChatCommChannel} #{dmRequest.VoiceCommChannel}
             Jobs willing to run: {JobFormatString (dmRequest.ScheduledJobs)}
-            Applicable Ranks: {RankFormatString (dmRequest.TaggedRanks.ToList())}";
+            Applicable Ranks: {RankFormatString (dmRequest.ScheduledJobs.SelectMany(job => job.TaggedRanks).ToList())}";
         }
 
-        private static string RankFormatString(List<Rank> taggedRanks)
+        private static string RankFormatString (List<Rank> taggedRanks)
         {
-            var sb = new StringBuilder();
+            var sb = new StringBuilder ();
 
             for (int i = 0; i < taggedRanks.Count; i++)
             {
-                sb.Append($"{i+1}) @{taggedRanks[i].RankLetter}-Rank ");
+                sb.Append ($"{i+1}) @{taggedRanks[i].RankLetter}-Rank ");
             }
 
-            return sb.ToString();
+            return sb.ToString ();
         }
 
-        private static string JobFormatString(ICollection<Job> jobs)
+        private static string JobFormatString (ICollection<Job> jobs)
         {
-            var sb = new StringBuilder();
+            var sb = new StringBuilder ();
 
             for (int i = 0; i < jobs.Count; i++)
             {
-                sb.Append($"{i+1}) {jobs.ElementAt(i).Title} (Difficult: {jobs.ElementAt(i).Difficulty})");
+                sb.Append ($"{i+1}) {jobs.ElementAt(i).Title} (Difficult: {jobs.ElementAt(i).Difficulty})");
             }
 
-            return sb.ToString();
+            return sb.ToString ();
         }
     }
 }
