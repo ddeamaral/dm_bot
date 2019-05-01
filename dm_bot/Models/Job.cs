@@ -4,6 +4,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace dm_bot.Models
 {
+    public enum Difficulty
+    {
+        Easy,
+        Medium,
+        Hard,
+        Deadly
+    }
+
     [Owned]
     public class Job
     {
@@ -18,7 +26,7 @@ namespace dm_bot.Models
 
         public string Author { get; set; }
 
-        public int Difficulty { get; set; }
+        public Difficulty Difficulty { get; set; }
 
         public string FirstApproval { get; set; }
 

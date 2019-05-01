@@ -146,13 +146,13 @@ namespace dm_bot.Commands
             var dm = new DungeonMasterAvailability ();
 
             dm.ChronusTimeLink = dictionary.ContainsKey ("TIMELINK") ? dictionary["TIMELINK"] : null;
-            dm.RoleplayingPercent = dictionary["RP"].ParseInt (-1);
+            dm.RoleplayingPercent = dictionary.ContainsKey ("RP") ? dictionary["RP"].ParseInt (-1) : -1;
             dm.MaxHours = dictionary.ContainsKey ("MAX") ? dictionary["MAX"].ParseInt () : -1;
             dm.MinHours = dictionary.ContainsKey ("MIN") ? dictionary["MIN"].ParseInt () : -1;
             dm.CombatPercent = dictionary.ContainsKey ("COMBAT") ? dictionary["COMBAT"].ParseInt () : -1;
             dm.ChatCommChannel = dictionary.ContainsKey ("SESSION") ? dictionary["SESSION"] : null;
             dm.VoiceCommChannel = dictionary.ContainsKey ("VOICE") ? dictionary["VOICE"] : null;
-            dm.ScheduledJobs = ParseJobs (dictionary["JOBS"]);
+            dm.ScheduledJobs = dictionary.ContainsKey ("JOBS") ? ParseJobs (dictionary["JOBS"]) : null;
             dm.Roll20Link = dictionary.ContainsKey ("ROLL20LINK") ? dictionary["ROLL20LINK"] : null;
             dm.MiscellaneousText = dictionary.ContainsKey ("MISC") ? dictionary["MISC"] : null;
 

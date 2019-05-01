@@ -12,25 +12,31 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace dm_bot.Commands
 {
     public class JobCommand : ModuleBase<SocketCommandContext>
     {
         private readonly DMContext _db;
+        private readonly IConfiguration _configuration;
 
-        public JobCommand (DMContext context)
+        public JobCommand (DMContext context, IConfiguration configuration)
         {
+            this._configuration = configuration;
             this._db = context;
         }
+
+        // $jobs add <details>
+        // $jobs list (returns list of jobs)
+        // $jobs approve -job <job id>
+        // $jobs find <title>
 
         [Command ("jobs")]
         public async Task AddJobAsync ([Remainder] string message = null)
         {
             try
             {
-                var user = Context.User;
-
                 var token = message.Split (" ", 2);
                 if (token.Length < 2 && !(token.Length == 1 && token[0].ToLower () == "list"))
                 {
@@ -42,7 +48,7 @@ namespace dm_bot.Commands
                 var operation = token[0].ToLower ();
                 string m = "";
 
-                var flags = new List<string> () { "list", "find", "approve", "add", "link" };
+                var flags = new List<string> () { "link", "description", "title", "unapproved", "job", "ranks" };
                 var flagParser = new FlagParser (flags);
                 var results = flagParser.ParseMessage (message);
 
@@ -54,10 +60,7 @@ namespace dm_bot.Commands
                 switch (operation)
                 {
                     case "add":
-                        await AddNewJob (m);
-                        break;
-                    case "description":
-                        await ParseJobUpdateRequest (m);
+                        await AddNewJob (results);
                         break;
                     case "find":
                         await SearchExistingJobs (m);
@@ -67,9 +70,6 @@ namespace dm_bot.Commands
                         break;
                     case "approve":
                         await ApproveJob (results);
-                        break;
-                    case "link":
-                        await LinkJob (m);
                         break;
                     case "help":
                         await ShowHelpMessage ();
@@ -86,17 +86,16 @@ namespace dm_bot.Commands
             }
         }
 
-        private Task LinkJob (string m)
-        {
-            throw new NotImplementedException ();
-        }
-
         private async Task ApproveJob (Dictionary<string, string> request)
         {
             var user = this.Context.User as SocketGuildUser;
-            if (user.Roles.Any (role => role.Name == ""))
+
+            var roles = new List<string> ();
+            _configuration.GetSection ("approvalRoles").Bind (roles);
+
+            if (user.Roles.Any (role => roles.Contains (role.Name)))
             {
-                var jobid = request["jobid"].ParseInt ();
+                var jobid = request["job"].ParseInt ();
                 var job = _db.Jobs.FirstOrDefault (j => j.Id == jobid);
 
                 if (job is null)
@@ -114,22 +113,44 @@ namespace dm_bot.Commands
             }
         }
 
-        private async Task AddNewJob (string message)
+        private async Task AddNewJob (Dictionary<string, string> request)
         {
-            var job = new Job () { Title = message, Author = Context.User.Mention };
+            var title = request.ContainsKey ("title") ? request["title"] : null;
+            var description = request.ContainsKey ("description") ? request["description"] : null;
+            var link = request.ContainsKey ("link") ? request["link"] : null;
+            var jobs = request.ContainsKey ("jobs") ? ParseJobs (request["jobs"]) : null;
+
+            var job = new Job () { Title = title, Description = description, JobLink = link, Author = Context.User.Mention };
 
             _db.Jobs.Add (job);
             await _db.SaveChangesAsync ();
-            await ReplyAsync ($"Successfully added job '{job.Title}', to update the description, use `$jobs description {job.Id} <Your description here>`");
+            await ReplyAsync ($"Successfully added job '{job.Title}', your job has the id: {job.Id}`");
+        }
+
+        private List<Rank> ParseJobs (string value)
+        {
+            var rankLetters = value.Split (",");
+
+            var ranks = (this.Context.Guild as SocketGuild).Roles;
+
+            var rankList = new List<Rank> ();
+
+            foreach (var rankLetter in rankLetters)
+            {
+                var rank = new Rank ();
+                rank.RankLetter = rankLetter;
+                rank.RankName = ranks.FirstOrDefault (r => r.Name.Contains ($"{rank.RankLetter}-"))?.Name;
+                rank.RankMention = ranks.FirstOrDefault (r => r.Name.Contains ($"{rank.RankLetter}-"))?.Mention;
+            }
+
+            return rankList;
         }
 
         private async Task ShowHelpMessage ()
         {
             var sb = new StringBuilder ();
 
-            sb.AppendLine ("$jobs add <Title> - Use this command to create a new job with a title");
-            sb.AppendLine ("$jobs description <job id> <Description> - Use this command to get enter a job description");
-            sb.AppendLine ("$jobs link <job id> <url to your job>");
+            sb.AppendLine ("$jobs add -title <Title> -description <description> -link <link to your job> -ranks <A,B,C,D,E,F>");
             sb.AppendLine ("$jobs find <Title> - Use this command to search for a job by title");
             sb.AppendLine ("$jobs list - Use this command to see a list of all available jobs");
             sb.AppendLine ("$jobs approve <job id>");
@@ -163,6 +184,12 @@ namespace dm_bot.Commands
 
         private async Task ReplyWithJobs (List<Job> jobs)
         {
+            if (jobs.Count == 0)
+            {
+                await ReplyAsync ("no jobs have been added yet");
+                return;
+            }
+
             var sb = new StringBuilder ();
             for (int i = 0; i < jobs.Count; i++)
             {
@@ -190,7 +217,7 @@ namespace dm_bot.Commands
 
             if (job == null)
             {
-                await ReplyAsync ($"Could not find a job, {this.Context.User.Mention} try using $jobs list to find your job.");
+                await ReplyAsync ($"Could not find a job, {this.Context.User.Mention} try using `$jobs list` to find your job.");
                 return;
             }
 

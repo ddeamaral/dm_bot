@@ -10,5 +10,7 @@ namespace dm_bot.Models
         public string RankName { get; set; }
 
         public string RankLetter { get; set; }
+
+        public string RankMention { get; set; }
     }
 }
