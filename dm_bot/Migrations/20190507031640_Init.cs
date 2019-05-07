@@ -81,6 +81,8 @@ namespace dm_bot.Migrations
                     JobLink = table.Column<string>(nullable: true),
                     Author = table.Column<string>(nullable: true),
                     Difficulty = table.Column<int>(nullable: false),
+                    FirstApproval = table.Column<string>(nullable: true),
+                    SecondApproval = table.Column<string>(nullable: true),
                     DungeonMasterAvailabilityId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
@@ -95,6 +97,32 @@ namespace dm_bot.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Lobbies",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    AvailabilityId = table.Column<int>(nullable: false),
+                    PlayerId = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Lobbies", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Lobbies_DungeonMasterAvailabilities_AvailabilityId",
+                        column: x => x.AvailabilityId,
+                        principalTable: "DungeonMasterAvailabilities",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Lobbies_Players_PlayerId",
+                        column: x => x.PlayerId,
+                        principalTable: "Players",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Ranks",
                 columns: table => new
                 {
@@ -102,15 +130,16 @@ namespace dm_bot.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
                     RankName = table.Column<string>(nullable: true),
                     RankLetter = table.Column<string>(nullable: true),
-                    DungeonMasterAvailabilityId = table.Column<int>(nullable: true)
+                    RankMention = table.Column<string>(nullable: true),
+                    JobId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Ranks", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Ranks_DungeonMasterAvailabilities_DungeonMasterAvailability~",
-                        column: x => x.DungeonMasterAvailabilityId,
-                        principalTable: "DungeonMasterAvailabilities",
+                        name: "FK_Ranks_Jobs_JobId",
+                        column: x => x.JobId,
+                        principalTable: "Jobs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -121,9 +150,20 @@ namespace dm_bot.Migrations
                 column: "DungeonMasterAvailabilityId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Ranks_DungeonMasterAvailabilityId",
+                name: "IX_Lobbies_AvailabilityId",
+                table: "Lobbies",
+                column: "AvailabilityId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Lobbies_PlayerId",
+                table: "Lobbies",
+                column: "PlayerId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Ranks_JobId",
                 table: "Ranks",
-                column: "DungeonMasterAvailabilityId");
+                column: "JobId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -132,13 +172,16 @@ namespace dm_bot.Migrations
                 name: "Items");
 
             migrationBuilder.DropTable(
-                name: "Jobs");
+                name: "Lobbies");
+
+            migrationBuilder.DropTable(
+                name: "Ranks");
 
             migrationBuilder.DropTable(
                 name: "Players");
 
             migrationBuilder.DropTable(
-                name: "Ranks");
+                name: "Jobs");
 
             migrationBuilder.DropTable(
                 name: "DungeonMasterAvailabilities");

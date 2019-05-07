@@ -184,6 +184,7 @@ namespace dm_bot.Commands
 
         private ICollection<Job> ParseJobs (string jobString)
         {
+
             var jobs = jobString.Split (",").Select (jobId => int.Parse (jobId));
 
             return _db.Jobs.Where (job => jobs.Contains (job.Id)).ToList ();

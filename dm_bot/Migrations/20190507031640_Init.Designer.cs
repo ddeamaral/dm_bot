@@ -10,7 +10,7 @@ using dm_bot.Contexts;
 namespace dm_bot.Migrations
 {
     [DbContext(typeof(DMContext))]
-    [Migration("20190418004037_Init")]
+    [Migration("20190507031640_Init")]
     partial class Init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -92,7 +92,11 @@ namespace dm_bot.Migrations
 
                     b.Property<int?>("DungeonMasterAvailabilityId");
 
+                    b.Property<string>("FirstApproval");
+
                     b.Property<string>("JobLink");
+
+                    b.Property<string>("SecondApproval");
 
                     b.Property<string>("Title");
 
@@ -101,6 +105,25 @@ namespace dm_bot.Migrations
                     b.HasIndex("DungeonMasterAvailabilityId");
 
                     b.ToTable("Jobs");
+                });
+
+            modelBuilder.Entity("dm_bot.Models.Lobby", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<int>("AvailabilityId");
+
+                    b.Property<int>("PlayerId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AvailabilityId");
+
+                    b.HasIndex("PlayerId")
+                        .IsUnique();
+
+                    b.ToTable("Lobbies");
                 });
 
             modelBuilder.Entity("dm_bot.Models.Player", b =>
@@ -132,15 +155,17 @@ namespace dm_bot.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<int?>("DungeonMasterAvailabilityId");
+                    b.Property<int?>("JobId");
 
                     b.Property<string>("RankLetter");
+
+                    b.Property<string>("RankMention");
 
                     b.Property<string>("RankName");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DungeonMasterAvailabilityId");
+                    b.HasIndex("JobId");
 
                     b.ToTable("Ranks");
                 });
@@ -152,11 +177,24 @@ namespace dm_bot.Migrations
                         .HasForeignKey("DungeonMasterAvailabilityId");
                 });
 
+            modelBuilder.Entity("dm_bot.Models.Lobby", b =>
+                {
+                    b.HasOne("dm_bot.Models.DungeonMasterAvailability", "Availability")
+                        .WithMany()
+                        .HasForeignKey("AvailabilityId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("dm_bot.Models.Player", "Player")
+                        .WithOne("Lobby")
+                        .HasForeignKey("dm_bot.Models.Lobby", "PlayerId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
             modelBuilder.Entity("dm_bot.Models.Rank", b =>
                 {
-                    b.HasOne("dm_bot.Models.DungeonMasterAvailability")
+                    b.HasOne("dm_bot.Models.Job")
                         .WithMany("TaggedRanks")
-                        .HasForeignKey("DungeonMasterAvailabilityId");
+                        .HasForeignKey("JobId");
                 });
 #pragma warning restore 612, 618
         }

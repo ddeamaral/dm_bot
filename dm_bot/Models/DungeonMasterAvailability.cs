@@ -29,7 +29,6 @@ namespace dm_bot.Models
 
         public ICollection<Job> ScheduledJobs { get; set; }
 
-
         public DateTime PlayDate { get; set; }
 
         public DateTimeOffset PlayDateOffset { get; set; }

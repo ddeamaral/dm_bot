@@ -19,11 +19,14 @@ namespace dm_bot.Contexts
 
         public DbSet<Item> Items { get; set; }
 
+        public DbSet<Lobby> Lobbies { get; set; }
+
         protected override void OnConfiguring (DbContextOptionsBuilder optionsBuilder)
         {
             var connectionService = new ConnectionService ();
 
             optionsBuilder.UseNpgsql (connectionService.GetDbConnection ());
+
         }
 
         public void SeedDatabase ()

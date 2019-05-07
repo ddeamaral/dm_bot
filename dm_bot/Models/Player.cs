@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace dm_bot.Models
 {
@@ -24,6 +25,7 @@ namespace dm_bot.Models
 
         public int Pips { get; set; }
 
+        [NotMapped]
         public decimal TotalWealth
         {
             get
@@ -39,6 +41,9 @@ namespace dm_bot.Models
             }
         }
 
+        public virtual Lobby Lobby { get; set; }
+
+        [NotMapped]
         public string DisplayWealth => $"{this.Gold}gp {this.Electrum}ep {this.Silver}sp {this.Copper}cp";
     }
 }
