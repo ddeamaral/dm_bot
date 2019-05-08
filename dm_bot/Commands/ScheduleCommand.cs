@@ -61,7 +61,7 @@ namespace dm_bot.Commands
             }
             catch (ParseException exception)
             {
-                await ReplyAsync ($"Sorry {message}, we cannot process that request.");
+                await ReplyAsync ($"Sorry {this.Context.User.Mention}, we cannot process that request.");
             }
         }
 
@@ -98,7 +98,7 @@ namespace dm_bot.Commands
                 "roll20",
                 "misc",
                 "date",
-                "tz",
+                "timezone",
                 "session",
                 "jobs"
             });
@@ -116,27 +116,27 @@ namespace dm_bot.Commands
         /// <returns>An awaitable task</returns>
         private async Task PrintHelp ()
         {
-
             var sb = new StringBuilder ();
 
             sb.AppendLine ("To schedule a game, use the following command `$schedule` with the following options:");
             sb.AppendLine ("**Required data**:");
-            sb.AppendLine ("-time=<Chronus link>");
-            sb.AppendLine ("-min=<Min Hours for session>");
-            sb.AppendLine ("-max=<Max Hours for session>");
-            sb.AppendLine ("-date=<Date in MM/DD/YYYY>");
-            sb.AppendLine ("-time=<Time in 24 hour HH:MM [AM/PM]>");
-            sb.AppendLine ("-timezone=<Your time zone>");
-            sb.AppendLine ("-jobs=<Job Ids separated by commas (no spaces, use $jobs list for id)>");
-            sb.AppendLine ("-ranks=<Rank letters separated by commas (no spaces)>");
-            sb.AppendLine ("-voice=<Voice channel>");
-            sb.AppendLine ("-session=<Text chat channel>");
-            sb.AppendLine ("-roll20=<roll20 game link>");
+            sb.AppendLine ("-timelink <Chronus link>");
+            sb.AppendLine ("-min <Min Hours for session>");
+            sb.AppendLine ("-max <Max Hours for session>");
+            sb.AppendLine ("-date <Date in MM/DD/YYYY>");
+            sb.AppendLine ("-time <Time in 24 hour HH:MM [AM/PM]>");
+            sb.AppendLine ("-timezone <Your time zone>");
+            sb.AppendLine ("-jobs <Job Ids separated by commas (no spaces, use $jobs list for id)>");
+            sb.AppendLine ("-ranks <Rank letters separated by commas (no spaces)>");
+            sb.AppendLine ("-voice <Voice channel>");
+            sb.AppendLine ("-session <Text chat channel>");
+            sb.AppendLine ("-roll20 <roll20 game link>");
             sb.AppendLine ("**Optional data**:");
-            sb.AppendLine ("-rp=<RP %>");
-            sb.AppendLine ("-combat=<Combat %>");
+            sb.AppendLine ("-rp <RP %>");
+            sb.AppendLine ("-combat <Combat %>");
+            sb.AppendLine ("-misc <Miscellaneous content you want to be shown outside of this format>");
 
-            sb.AppendLine ("**Example**: $schedule -time http://a.chronus.eu/18AC248 -session Session10 -voice VC10 -min 4 -max 4 -rp=40 -combat 60 -jobs 1,2,3 -ranks A,F -misc Then here is some additional content you can have that will just show up here.");
+            sb.AppendLine ("**Example**: $schedule -timelink http://a.chronus.eu/18AC248 -session Session10 -voice VC10 -min 4 -max 4 -rp=40 -combat 60 -jobs 1,2,3 -ranks A,F -misc Then here is some additional content you can have that will just show up here.");
 
             await ReplyAsync (sb.ToString ());
         }
@@ -145,23 +145,23 @@ namespace dm_bot.Commands
         {
             var dm = new DungeonMasterAvailability ();
 
-            dm.ChronusTimeLink = dictionary.ContainsKey ("TIMELINK") ? dictionary["TIMELINK"] : null;
-            dm.RoleplayingPercent = dictionary.ContainsKey ("RP") ? dictionary["RP"].ParseInt (-1) : -1;
-            dm.MaxHours = dictionary.ContainsKey ("MAX") ? dictionary["MAX"].ParseInt () : -1;
-            dm.MinHours = dictionary.ContainsKey ("MIN") ? dictionary["MIN"].ParseInt () : -1;
-            dm.CombatPercent = dictionary.ContainsKey ("COMBAT") ? dictionary["COMBAT"].ParseInt () : -1;
-            dm.ChatCommChannel = dictionary.ContainsKey ("SESSION") ? dictionary["SESSION"] : null;
-            dm.VoiceCommChannel = dictionary.ContainsKey ("VOICE") ? dictionary["VOICE"] : null;
-            dm.ScheduledJobs = dictionary.ContainsKey ("JOBS") ? ParseJobs (dictionary["JOBS"]) : null;
-            dm.Roll20Link = dictionary.ContainsKey ("ROLL20LINK") ? dictionary["ROLL20LINK"] : null;
-            dm.MiscellaneousText = dictionary.ContainsKey ("MISC") ? dictionary["MISC"] : null;
+            dm.ChronusTimeLink = dictionary.ContainsKey ("timelink") ? dictionary["timelink"] : null;
+            dm.RoleplayingPercent = dictionary.ContainsKey ("rp") ? dictionary["rp"].ParseInt (-1) : -1;
+            dm.MaxHours = dictionary.ContainsKey ("max") ? dictionary["max"].ParseInt () : -1;
+            dm.MinHours = dictionary.ContainsKey ("min") ? dictionary["min"].ParseInt () : -1;
+            dm.CombatPercent = dictionary.ContainsKey ("combat") ? dictionary["combat"].ParseInt () : -1;
+            dm.ChatCommChannel = dictionary.ContainsKey ("session") ? dictionary["session"] : null;
+            dm.VoiceCommChannel = dictionary.ContainsKey ("voice") ? dictionary["voice"] : null;
+            dm.ScheduledJobs = dictionary.ContainsKey ("jobs") ? await ParseJobs (dictionary["jobs"]) : null;
+            dm.Roll20Link = dictionary.ContainsKey ("roll20") ? dictionary["roll20"] : null;
+            dm.MiscellaneousText = dictionary.ContainsKey ("misc") ? dictionary["misc"] : null;
 
-            var hasDateParts = dictionary.ContainsKey ("DATE") && dictionary.ContainsKey ("TIME") && dictionary.ContainsKey ("TZ");
+            var hasDateParts = dictionary.ContainsKey ("date") && dictionary.ContainsKey ("time") && dictionary.ContainsKey ("timezone");
 
             // Parse out the date for the game to expire
             if (hasDateParts)
             {
-                var playDate = $"{dictionary["DATE"]} {dictionary["TIME"]}";
+                var playDate = $"{dictionary["date"]} {dictionary["time"]}";
                 DateTime dt;
 
                 if (DateTime.TryParse (playDate, out dt))
@@ -171,7 +171,7 @@ namespace dm_bot.Commands
                 }
                 else
                 {
-                    await ReplyAsync ($"Sorry, {Context.User.Mention}, please enter a DATE, TIME and TZ");
+                    await ReplyAsync ($"Sorry, {Context.User.Mention}, please enter a date, timelink and timezone");
                 }
             }
 
@@ -182,12 +182,17 @@ namespace dm_bot.Commands
             return dm;
         }
 
-        private ICollection<Job> ParseJobs (string jobString)
+        private async Task<ICollection<Job>> ParseJobs (string jobString)
         {
 
-            var jobs = jobString.Split (",").Select (jobId => int.Parse (jobId));
+            var jobs = jobString.Split (",").Select (jobId => jobId.ParseInt (-1));
 
-            return _db.Jobs.Where (job => jobs.Contains (job.Id)).ToList ();
+            if (await _db.Jobs.AnyAsync (job => jobs.Contains (job.Id)))
+            {
+                return _db.Jobs.Where (job => jobs.Contains (job.Id)).ToList ();
+            }
+
+            return null;
         }
     }
 }

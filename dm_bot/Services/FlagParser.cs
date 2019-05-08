@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace dm_bot.Services
 {
@@ -21,6 +22,13 @@ namespace dm_bot.Services
         public Dictionary<string, string> ParseMessage (string message)
         {
             var results = new Dictionary<string, string> ();
+            var ignoreCase = StringComparison.CurrentCultureIgnoreCase;
+
+            if (string.IsNullOrWhiteSpace (message))
+            {
+                return results;
+            }
+
             var flagIndexes = new List < (int flagIndex, string flag) > ();
 
             if (flags != null && flags.Count () != 0)
@@ -28,9 +36,9 @@ namespace dm_bot.Services
                 // Find all indexes of the flags
                 foreach (var flag in flags)
                 {
-                    if (message.Contains ($"-{flag}"))
+                    if (message.IndexOf ($"-{flag}", ignoreCase) >= 0)
                     {
-                        var indexOfFlag = message.IndexOf ($"-{flag}");
+                        var indexOfFlag = message.IndexOf ($"-{flag}", ignoreCase);
                         flagIndexes.Add ((indexOfFlag, flag));
                     }
                 }
@@ -45,10 +53,10 @@ namespace dm_bot.Services
                     // Get the last flag, without going out of range i.e. -add txt (-list more txt)
                     if (i == flagIndexes.Count - 1)
                     {
-                        var lastFlagIndex = message.Length - flagIndexes[i].flagIndex;
+                        var lastIndex = flagIndex + flagIndexes[i].flag.Length + 1;
+                        var lastFlagIndex = message.Length - lastIndex;
                         var lastFlagMessage = message
-                            .Substring (flagIndex, lastFlagIndex)
-                            .Replace ($"-{flagIndexes[i].flag}", "")
+                            .Substring (lastIndex, lastFlagIndex)
                             .Trim ();
 
                         results.Add (flagIndexes[i].flag, lastFlagMessage);
@@ -58,7 +66,9 @@ namespace dm_bot.Services
 
                     // Get all other flags but the last
                     int nextFlagIndex = flagIndexes[i + 1].flagIndex;
-                    var text = message.Substring (flagIndex, nextFlagIndex - flagIndex).Replace ($"-{flagIndexes[i].flag}", "").Trim ();
+                    int startIndex = flagIndex + flagIndexes[i].flag.Length + 1;
+
+                    var text = message.Substring (startIndex, nextFlagIndex - startIndex).Trim ();
                     results.Add (flagIndexes[i].flag, text);
                 }
             }

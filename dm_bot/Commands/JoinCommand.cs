@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using dm_bot.Contexts;
 using dm_bot.Extensions;
+using dm_bot.Models;
 using dm_bot.Services;
 using Discord.Commands;
 using Microsoft.EntityFrameworkCore;
@@ -48,6 +49,15 @@ namespace dm_bot.Commands
                 await ReplyAsync ($"Sorry {player.DiscordMention}, that game could not be found.  Use `$schedule list` to find your games id.");
                 return;
             }
+
+            var newLobbyEntry = new Lobby ();
+            newLobbyEntry.AvailabilityId = lobby.Id;
+            newLobbyEntry.PlayerId = player.Id;
+
+            await db.Lobbies.AddAsync (newLobbyEntry);
+            await db.SaveChangesAsync ();
+
+            await ReplyAsync ($"You have signed up successfully, {player.DiscordMention}.");
         }
     }
 }

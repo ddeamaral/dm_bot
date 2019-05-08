@@ -82,19 +82,32 @@ namespace dm_bot.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("Author");
+                    b.Property<decimal>("AuthorId")
+                        .HasConversion(new ValueConverter<decimal, decimal>(v => default(decimal), v => default(decimal), new ConverterMappingHints(precision: 20, scale: 0)));
+
+                    b.Property<string>("AuthorMention");
 
                     b.Property<string>("Description");
 
-                    b.Property<int>("Difficulty");
+                    b.Property<string>("Difficulty");
 
                     b.Property<int?>("DungeonMasterAvailabilityId");
 
                     b.Property<string>("FirstApproval");
 
+                    b.Property<decimal>("FirstApprovalId")
+                        .HasConversion(new ValueConverter<decimal, decimal>(v => default(decimal), v => default(decimal), new ConverterMappingHints(precision: 20, scale: 0)));
+
                     b.Property<string>("JobLink");
 
+                    b.Property<bool>("Personal");
+
+                    b.Property<bool>("Repeatable");
+
                     b.Property<string>("SecondApproval");
+
+                    b.Property<decimal>("SecondApprovalId")
+                        .HasConversion(new ValueConverter<decimal, decimal>(v => default(decimal), v => default(decimal), new ConverterMappingHints(precision: 20, scale: 0)));
 
                     b.Property<string>("Title");
 

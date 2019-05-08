@@ -34,29 +34,14 @@ namespace dm_bot.Commands
         // $jobs find <title>
 
         [Command ("jobs")]
-        public async Task AddJobAsync ([Remainder] string message = null)
+        public async Task AddJobAsync (string operation, [Remainder] string message = null)
         {
             try
             {
-                var token = message.Split (" ", 2);
-                if (token.Length < 2 && !(token.Length == 1 && token[0].ToLower () == "list"))
-                {
-                    await ReplyAsync ($"you must specify a command, use '$jobs help' for help.");
-                    return;
-                }
-                var job = new Job ();
 
-                var operation = token[0].ToLower ();
-                string m = "";
-
-                var flags = new List<string> () { "link", "description", "title", "unapproved", "job", "ranks" };
+                var flags = new List<string> () { "link", "description", "title", "unapproved", "job", "ranks", "misc", "difficulty", "personal", "repeatable" };
                 var flagParser = new FlagParser (flags);
                 var results = flagParser.ParseMessage (message);
-
-                if (operation != "list")
-                {
-                    m = message.Substring (message.IndexOf (" ")).Trim ();
-                }
 
                 switch (operation)
                 {
@@ -66,6 +51,11 @@ namespace dm_bot.Commands
                     case "find":
                         await SearchExistingJobs (results);
                         break;
+
+                    case "details":
+                        await ShowJobDetails (results);
+                        break;
+
                     case "list":
                         await ListJobs (results);
                         break;
@@ -74,6 +64,9 @@ namespace dm_bot.Commands
                         break;
                     case "help":
                         await ShowHelpMessage ();
+                        break;
+                    case "delete":
+                        await DeleteJob (results);
                         break;
 
                     default:
@@ -84,6 +77,59 @@ namespace dm_bot.Commands
             {
                 await ReplyAsync ($"Sorry {message}, I cannot process that request.");
             }
+        }
+
+        private async Task ShowJobDetails (Dictionary<string, string> results)
+        {
+            if (!results.ContainsKey ("job"))
+            {
+                await ReplyAsync ($"Please supply a job id {Context.User.Mention}");
+                return;
+            }
+
+            var jobId = results["job"].ParseInt (-1);
+
+            var list = _db.Jobs.ToList ();
+
+            var job = await _db.Jobs.FirstOrDefaultAsync (j => j.Id == jobId);
+
+            if (job is null)
+            {
+                await ReplyAsync ($"Could not find a job with that id {Context.User.Mention}");
+                return;
+            }
+
+            await ReplyWithJobDetails (job);
+        }
+
+        private async Task DeleteJob (Dictionary<string, string> results)
+        {
+            if (!results.ContainsKey ("job"))
+            {
+                await ReplyAsync ($"Sorry {this.Context.User.Mention}, you must specify a job");
+                return;
+            }
+
+            var jobId = results["job"].ParseInt (-1);
+
+            var job = await _db.Jobs.FirstOrDefaultAsync (j => j.Id == jobId);
+
+            if (job is null)
+            {
+                await ReplyAsync ($"Sorry {this.Context.User.Mention}, that job doesn't seem to exist");
+                return;
+            }
+
+            if (job.AuthorId != Context.User.Id)
+            {
+                await ReplyAsync ($"Sorry {this.Context.User.Mention}, you are not the author of this job, so you cannot delete it");
+                return;
+            }
+
+            _db.Jobs.Remove (job);
+            await _db.SaveChangesAsync ();
+
+            await ReplyAsync ($"{this.Context.User.Mention} has successfully deleted job: {job.Title} ({job.Id})!");
         }
 
         private async Task ApproveJob (Dictionary<string, string> request)
@@ -115,14 +161,16 @@ namespace dm_bot.Commands
                 if (string.IsNullOrWhiteSpace (job.FirstApproval))
                 {
                     job.FirstApproval = user.Mention;
+                    job.FirstApprovalId = user.Id;
                 }
                 else if (string.IsNullOrWhiteSpace (job.SecondApproval))
                 {
                     job.SecondApproval = user.Mention;
+                    job.SecondApprovalId = user.Id;
                 }
                 else
                 {
-                    await ReplyAsync ($"Looks like the job is already approved {user.Mention}");
+                    await ReplyAsync ($"Looks like the job is already approved {Context.User.Mention}");
                     return;
                 }
 
@@ -131,14 +179,44 @@ namespace dm_bot.Commands
             }
         }
 
+        private async Task<ICollection<Rank>> GetRanks (string message)
+        {
+            if (string.IsNullOrWhiteSpace (message))
+            {
+                await ReplyAsync ($"{Context.User.Mention} Please supply the ranks that can go on this job");
+                return new List<Rank> ();
+            }
+
+            var rankLetters = message.Split (",", options : StringSplitOptions.RemoveEmptyEntries);
+
+            var ranks = _db.Ranks.Where (rank => rankLetters.Contains (rank.RankLetter));
+
+            return ranks.ToList ();
+        }
+
         private async Task AddNewJob (Dictionary<string, string> request)
         {
             var title = request.ContainsKey ("title") ? request["title"] : null;
             var description = request.ContainsKey ("description") ? request["description"] : null;
             var link = request.ContainsKey ("link") ? request["link"] : null;
             var jobs = request.ContainsKey ("jobs") ? ParseJobs (request["jobs"]) : null;
+            var difficulty = request.ContainsKey ("difficulty") ? request["difficulty"] : null;
+            var personal = request.ContainsKey ("personal") && request["personal"] == "y";
+            var repeatable = request.ContainsKey ("repeatable") && request["repeatable"] == "y";
+            var ranks = request.ContainsKey ("ranks") ? request["ranks"] : null;
 
-            var job = new Job () { Title = title, Description = description, JobLink = link, Author = Context.User.Mention };
+            var job = new Job ()
+            {
+                Title = title,
+                Description = description,
+                JobLink = link,
+                AuthorMention = Context.User.Mention,
+                AuthorId = Context.User.Id,
+                Difficulty = difficulty,
+                Repeatable = repeatable,
+                Personal = personal,
+                TaggedRanks = await GetRanks (ranks)
+            };
 
             _db.Jobs.Add (job);
             await _db.SaveChangesAsync ();
@@ -168,10 +246,12 @@ namespace dm_bot.Commands
         {
             var sb = new StringBuilder ();
 
-            sb.AppendLine ("$jobs add -title <Title> -description <description> -link <link to your job> -ranks <A,B,C,D,E,F>");
-            sb.AppendLine ("$jobs find <Title> - Use this command to search for a job by title");
+            sb.AppendLine ("$jobs add -title <Title> -description <description> -link <link to your job> -ranks <A,B,C,D,E,F> -misc <some miscellaneous text you want to display here> -personal <y or n> -repeatable <y or n>");
+            sb.AppendLine ("$jobs find -title <Title> - Use this command to search for a job by title");
             sb.AppendLine ("$jobs list - Use this command to see a list of all available jobs");
-            sb.AppendLine ("$jobs approve <job id>");
+            sb.AppendLine ("$jobs list -unapproved - Use this command to see a list of all unapproved jobs");
+            sb.AppendLine ("$jobs approve -job <job id> - to approve a job");
+            sb.AppendLine ("$jobs delete -job <job id> - to delete your job");
 
             var embedBuilder = new EmbedBuilder ();
             embedBuilder.WithDescription (sb.ToString ());
@@ -182,7 +262,7 @@ namespace dm_bot.Commands
         {
             if (!request.ContainsKey ("title"))
             {
-                await ReplyAsync ($"please supply a title, {this.Context.User.Mention}");
+                await ReplyAsync ($"Please supply a title, {this.Context.User.Mention}");
                 return;
             }
 
@@ -196,14 +276,38 @@ namespace dm_bot.Commands
                 return;
             }
 
-            await ReplyAsync ($"I could not find a job with that title, please double check it exists");
+            await ReplyAsync ($"{this.Context.User.Mention}, I could not find a job with that title, please double check it exists");
+        }
+
+        private async Task ReplyWithJobDetails (Job job)
+        {
+            var sb = new StringBuilder ();
+            sb.AppendLine ($"{job.Title} - Written by {job.AuthorMention} (Difficulty: {job.Difficulty})");
+            sb.AppendLine ($"{Format.Url("job link",job.JobLink)}");
+            sb.AppendLine ($"{job.Description}");
+            sb.AppendLine ($"Personal: {(job.Personal ? "Yes" : "No")}");
+            sb.AppendLine ($"Repeatable: {(job.Repeatable ? "Yes" : "No")}");
+            sb.AppendLine ($"Ranks: {job.TaggedRanks}");
+            if (string.IsNullOrWhiteSpace (job.FirstApproval) || string.IsNullOrWhiteSpace (job.SecondApproval))
+            {
+                sb.AppendLine ("Job not yet approved");
+            }
+            else
+            {
+                sb.AppendLine ($"Approved by: {job.FirstApproval} and {job.SecondApproval}");
+            }
+
+            await ReplyAsync ($"Sent you information about {job.Title} ({job.Id}), {Context.User.Mention}");
+            var embedBuilder = new EmbedBuilder ();
+            embedBuilder.WithDescription (sb.ToString ());
+            await this.Context.User.SendMessageAsync (embed: embedBuilder.Build ());
         }
 
         private async Task ListJobs (Dictionary<string, string> request)
         {
             List<Job> jobs = new List<Job> ();
 
-            if (request.ContainsKey ("unapproved "))
+            if (request.ContainsKey ("unapproved"))
             {
                 jobs = await _db.Jobs.Where (job => string.IsNullOrWhiteSpace (job.FirstApproval) || string.IsNullOrWhiteSpace (job.SecondApproval)).ToListAsync ();
             }
@@ -219,14 +323,14 @@ namespace dm_bot.Commands
         {
             if (jobs.Count == 0)
             {
-                await ReplyAsync ("no jobs have been added yet");
+                await ReplyAsync ($"No jobs have been added yet {Context.User.Mention}");
                 return;
             }
 
             var sb = new StringBuilder ();
             for (int i = 0; i < jobs.Count; i++)
             {
-                sb.AppendLine ($" { jobs[i].Id }) { jobs[i].Title } Difficulty: { jobs[i].Difficulty }");
+                sb.AppendLine ($@"{ jobs[i].Id }) { jobs[i].Title } - Difficulty: { jobs[i].Difficulty } - Author: {MentionUtils.MentionUser(jobs[i].AuthorId)}");
             }
 
             var embedBuilder = new EmbedBuilder ();

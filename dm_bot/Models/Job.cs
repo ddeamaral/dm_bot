@@ -4,14 +4,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace dm_bot.Models
 {
-    public enum Difficulty
-    {
-        Easy,
-        Medium,
-        Hard,
-        Deadly
-    }
-
     [Owned]
     public class Job
     {
@@ -24,14 +16,24 @@ namespace dm_bot.Models
 
         public string JobLink { get; set; }
 
-        public string Author { get; set; }
+        public string AuthorMention { get; set; }
 
-        public Difficulty Difficulty { get; set; }
+        public ulong AuthorId { get; set; }
+
+        public string Difficulty { get; set; }
 
         public string FirstApproval { get; set; }
 
+        public ulong FirstApprovalId { get; set; }
+
         public string SecondApproval { get; set; }
 
+        public ulong SecondApprovalId { get; set; }
+
         public ICollection<Rank> TaggedRanks { get; set; }
+
+        public bool Personal { get; internal set; }
+
+        public bool Repeatable { get; internal set; }
     }
 }

@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace dm_bot.Migrations
 {
-    public partial class Init : Migration
+    public partial class init : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -79,10 +79,15 @@ namespace dm_bot.Migrations
                     Title = table.Column<string>(nullable: true),
                     Description = table.Column<string>(nullable: true),
                     JobLink = table.Column<string>(nullable: true),
-                    Author = table.Column<string>(nullable: true),
-                    Difficulty = table.Column<int>(nullable: false),
+                    AuthorMention = table.Column<string>(nullable: true),
+                    AuthorId = table.Column<decimal>(nullable: false),
+                    Difficulty = table.Column<string>(nullable: true),
                     FirstApproval = table.Column<string>(nullable: true),
+                    FirstApprovalId = table.Column<decimal>(nullable: false),
                     SecondApproval = table.Column<string>(nullable: true),
+                    SecondApprovalId = table.Column<decimal>(nullable: false),
+                    Personal = table.Column<bool>(nullable: false),
+                    Repeatable = table.Column<bool>(nullable: false),
                     DungeonMasterAvailabilityId = table.Column<int>(nullable: true)
                 },
                 constraints: table =>
